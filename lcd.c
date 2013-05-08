@@ -116,3 +116,10 @@ void lcd_init()
 
     lcd_clear();
 }
+
+void lcd_write(const char *s)
+{
+    for (;*s; s++) {
+        lcd_putc(*s);
+    }
+}
