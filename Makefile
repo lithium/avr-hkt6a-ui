@@ -10,7 +10,7 @@ OBJECTS		= main.o lcd.o
 
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_PART = m328p
-AVRDUDE_PORT = /dev/tty.usbmodemfa1211
+AVRDUDE_PORT = /dev/tty.usbmodemfa1221
 
 
 include common.mk
