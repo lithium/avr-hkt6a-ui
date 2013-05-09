@@ -1,0 +1,32 @@
+
+
+DIN connector:
+    1: PMM signal
+    2: +5v
+    3: RX
+    4: TX
+
+
+
+
+
+arduino uno:
+     0(rx) -> DIN 4(tx)
+     1(tx) -> DIN 3(rx)
+
+
+
+
+    10(pb2) -> LCD 4(rs)
+     9(pb1) -> LCD 5(rw)
+     8(pb0) -> LCD 6(e)
+     7(pd7) -> LCD 7(DB0)
+     6(pd6) -> LCD 8(DB1)
+     5(pd5) -> LCD 9(DB2)
+     4(pd4) -> LCD 10(DB3)
+
+
+    A0(pc0) -> THR
+    A1(pc1) -> AIL
+    A3(pc2) -> BUTTON
+    

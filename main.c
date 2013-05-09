@@ -3,13 +3,13 @@
 #include <avr/sleep.h>
 #include <util/delay.h>
 
-#define   XTAL      16e6      // 1MHz 
 
 
 #define LED_ON() PORTB |= _BV(5)
 #define LED_OFF() PORTB |= _BV(5)
 
 #include "lcd.h"
+#include "millis.h"
 
 static uint8_t g_cur_pot=0;
 #define g_n_pots 2
@@ -18,15 +18,21 @@ static uint8_t g_button=0;
 
 static uint8_t g_dirty=1;
 
-static int frame=0;
+int frame=0;
 
 int main(void) 
 {
+
     DDRB |= _BV(PB5);
     LED_OFF();
 
+    sei();
 
-    //set up timer
+
+    millis_init();
+
+
+    //set up timer 1 for input resolution
     TCCR1A = (1<<WGM12); //CTC
     TCCR1B = 0b011; // divide by 256
     OCR1A = 20; //~300ms
@@ -35,7 +41,7 @@ int main(void)
 
     //pushbutton on PB4
     DDRB &= ~_BV(4); //input pin
-    PORTB &= ~_BV(4); // pull down
+    PORTB &= ~_BV(4); // turn off pull up
 
 
     //setup ADC 
@@ -44,7 +50,6 @@ int main(void)
     ADMUX = (1<<REFS0)|(1<<ADLAR);
     //trigger one conversion for interrupt
     ADCSRA |= (1<<ADIE)|(1<<ADSC);
-    sei();
 
 
     lcd_init();
@@ -87,16 +92,16 @@ void paint()
     lcd_cursor(10,0);
     lcd_write(buf);
 
-    // if (g_button)  {
-        sprintf(buf, "c:%03d", g_button);
-        lcd_cursor(10,1);
-        lcd_write(buf);
-    // }
+    sprintf(buf, "c:%03d", g_button);
+    lcd_cursor(10,1);
+    lcd_write(buf);
 }
 
 ISR(ADC_vect)
 {
+    cli();
     uint8_t v = ADCH;
+    sei();
 
     if (v != g_pots[g_cur_pot]) {
         g_pots[g_cur_pot] = v;
