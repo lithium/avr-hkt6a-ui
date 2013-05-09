@@ -3,6 +3,8 @@
 #include <avr/sleep.h>
 #include <util/delay.h>
 
+#define   XTAL      16e6      // 1MHz 
+
 
 #define LED_ON() PORTB |= _BV(5)
 #define LED_OFF() PORTB |= _BV(5)
@@ -12,13 +14,11 @@
 static uint8_t g_cur_pot=0;
 #define g_n_pots 2
 static uint8_t g_pots[g_n_pots];
+static uint8_t g_button=0;
 
 static uint8_t g_dirty=1;
 
-void read_pots()
-{
-    ADCSRA |= (1<<ADSC);
-}
+static int frame=0;
 
 int main(void) 
 {
@@ -26,11 +26,22 @@ int main(void)
     LED_OFF();
 
 
+    //set up timer
+    TCCR1A = (1<<WGM12); //CTC
+    TCCR1B = 0b011; // divide by 256
+    OCR1A = 20; //~300ms
+    TIMSK1 |= (1<<OCIE1A);
+
+
+    //pushbutton on PB4
+    DDRB &= ~_BV(4); //input pin
+    PORTB &= ~_BV(4); // pull down
+
+
     //setup ADC 
     // prescaler: 128
     ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0)| (1<<ADEN);
     ADMUX = (1<<REFS0)|(1<<ADLAR);
-
     //trigger one conversion for interrupt
     ADCSRA |= (1<<ADIE)|(1<<ADSC);
     sei();
@@ -48,6 +59,7 @@ int main(void)
 
     for (;;) {
         if (g_dirty) {
+            frame++;
             paint();
             g_dirty = 0;
         }
@@ -71,23 +83,44 @@ void paint()
     lcd_cursor(3,1);
     lcd_write(buf);
 
+    sprintf(buf, "f:%03d", frame);
+    lcd_cursor(10,0);
+    lcd_write(buf);
+
+    // if (g_button)  {
+        sprintf(buf, "c:%03d", g_button);
+        lcd_cursor(10,1);
+        lcd_write(buf);
+    // }
 }
 
 ISR(ADC_vect)
 {
+    uint8_t v = ADCH;
 
-    g_pots[g_cur_pot] = ADCH;
-    g_dirty = 1;
-
-
-    int new_pot = g_cur_pot+1;
-    if (new_pot >= g_n_pots) {
-        new_pot = 0;
+    if (v != g_pots[g_cur_pot]) {
+        g_pots[g_cur_pot] = v;
+        g_dirty = 1;
     }
-    g_cur_pot = new_pot;
+
+
+    if (++g_cur_pot >= g_n_pots) {
+        g_cur_pot = 0;
+        // turn off ADC interrupts for now
+        ADCSRA &= ~((1<<ADSC)|(1<<ADEN));
+    }
 
     // switch input pin
-    ADMUX = (ADMUX&0xF0) | (new_pot & 0x0F);
-    // trigger another interrupt
-    ADCSRA |= (1<<ADSC);
+    ADMUX = (ADMUX&0xF0) | (g_cur_pot & 0x0F);
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+    ADCSRA |= ((1<<ADSC)|(1<<ADEN));
+
+    uint8_t v = (PINB & _BV(4));
+    if (v != g_button) {
+        g_button=v;
+        g_dirty=1;
+    }
 }
