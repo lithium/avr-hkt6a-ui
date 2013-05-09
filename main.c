@@ -15,8 +15,11 @@ static uint8_t g_cur_pot=0;
 #define g_n_pots 2
 static uint8_t g_pots[g_n_pots];
 static uint8_t g_button=0;
+static unsigned long g_button_ts=0;
 
 static uint8_t g_dirty=1;
+
+#define LONG_PRESS_MILLIS 1500
 
 int frame=0;
 
@@ -88,9 +91,9 @@ void paint()
     lcd_cursor(3,1);
     lcd_write(buf);
 
-    sprintf(buf, "f:%03d", frame);
-    lcd_cursor(10,0);
-    lcd_write(buf);
+    // sprintf(buf, "f:%03d", frame);
+    // lcd_cursor(10,0);
+    // lcd_write(buf);
 
     sprintf(buf, "c:%03d", g_button);
     lcd_cursor(10,1);
@@ -111,7 +114,7 @@ ISR(ADC_vect)
 
     if (++g_cur_pot >= g_n_pots) {
         g_cur_pot = 0;
-        // turn off ADC interrupts for now
+        // turn off ADC interrupts until next TIMER1 
         ADCSRA &= ~((1<<ADSC)|(1<<ADEN));
     }
 
@@ -125,7 +128,30 @@ ISR(TIMER1_COMPA_vect)
 
     uint8_t v = (PINB & _BV(4));
     if (v != g_button) {
+        // edge trigger
         g_button=v;
+        g_button_ts=millis();
+
+        lcd_cursor(6,0);
+        if (g_button) {
+            lcd_write("click");
+        } else { //release
+            lcd_write("         ");
+        }
         g_dirty=1;
     }
+    else
+    if (g_button && g_button_ts) {
+        unsigned long now = millis();
+        unsigned long delta = now - g_button_ts;
+        if (now - g_button_ts > LONG_PRESS_MILLIS) {
+            lcd_cursor(6,0);
+            static char f[10];
+            sprintf(f,"long:%d",delta);
+            lcd_write(f);
+            g_button_ts = now;
+            // g_dirty=1;
+        }
+    }
+
 }

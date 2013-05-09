@@ -6,7 +6,6 @@ volatile unsigned long timer0_millis = 0;
 static unsigned char timer0_fract = 0;
 
 
-extern int frame;
 ISR(TIMER0_OVF_vect)
 {
     unsigned long m = timer0_millis;
