@@ -123,3 +123,22 @@ void lcd_write(const char *s)
         lcd_putc(*s);
     }
 }
+
+static char _print_buffer[16]; 
+void lcd_printf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args,fmt);
+    snprintf(_print_buffer, 16, fmt, args);
+    lcd_write(_print_buffer);
+    va_end(args);
+}
+void lcd_printfxy(uint8_t x, uint8_t y, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args,fmt);
+    lcd_cursor(x,y);
+    lcd_printf(fmt, args);
+    va_end(args);
+
+}
