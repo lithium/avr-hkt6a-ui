@@ -10,18 +10,20 @@
 
 #include "lcd.h"
 #include "millis.h"
+#include "event.h"
 
 static uint8_t g_cur_pot=0;
 #define g_n_pots 2
 static uint8_t g_pots[g_n_pots];
-static uint8_t g_button=0;
-static unsigned long g_button_ts=0;
+uint8_t g_button=0;
 
-static uint8_t g_dirty=1;
+uint8_t g_dirty=1;
 
 #define LONG_PRESS_MILLIS 1500
 
 int frame=0;
+
+void paint(void);
 
 int main(void) 
 {
@@ -33,18 +35,14 @@ int main(void)
 
 
     millis_init();
-
-
-    //set up timer 1 for input resolution
-    TCCR1A = (1<<WGM12); //CTC
-    TCCR1B = 0b011; // divide by 256
-    OCR1A = 20; //~300ms
-    TIMSK1 |= (1<<OCIE1A);
+    lcd_init();
+    event_init();
 
 
     //pushbutton on PB4
     DDRB &= ~_BV(4); //input pin
     PORTB &= ~_BV(4); // turn off pull up
+    event_register_button(1,&PORTB,_BV(PB4));
 
 
     //setup ADC 
@@ -55,7 +53,6 @@ int main(void)
     ADCSRA |= (1<<ADIE)|(1<<ADSC);
 
 
-    lcd_init();
     LED_ON();
 
 
@@ -71,6 +68,9 @@ int main(void)
             paint();
             g_dirty = 0;
         }
+        Event *e = event_peek();
+        // if ()
+
         sleep_enable();
         sleep_cpu();
         sleep_disable();
@@ -122,6 +122,7 @@ ISR(ADC_vect)
     ADMUX = (ADMUX&0xF0) | (g_cur_pot & 0x0F);
 }
 
+/*
 ISR(TIMER1_COMPA_vect)
 {
     ADCSRA |= ((1<<ADSC)|(1<<ADEN));
@@ -155,3 +156,4 @@ ISR(TIMER1_COMPA_vect)
     }
 
 }
+    */

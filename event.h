@@ -1,9 +1,19 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+#include "millis.h"
 
+
+
+#define EVENT_BUTTON_MAX_COUNT 1
 
 #define EVENT_QUEUE_MAX_SIZE 5
+
+
+#define EVENT_TIMING_DOUBLE_CLICK 300
+#define EVENT_TIMING_LONG_CLICK 1800
 
 typedef enum {
     EVENT_INVALID=0,
@@ -12,6 +22,7 @@ typedef enum {
     EVENT_CLICK,
     EVENT_DOUBLE_CLICK,
     EVENT_LONG_CLICK,
+    EVENT_PAINT,
     EVENT_NUM
 } EventType;
 
@@ -23,14 +34,15 @@ typedef struct {
 
 
 typedef struct {
-    uint8_t button;
-} ClickEvent;
+    uint8_t number;
+} ButtonEvent;
 
 typedef struct {
     uint8_t id;
     EventType type;
+    uint16_t millis;
     union {
-        ClickEvent click;
+        ButtonEvent button;
     } v;
 } Event;
 
@@ -43,11 +55,12 @@ void event_init();
 uint8_t event_publish(Event e);
 
 uint8_t event_push(Event e);
-Event event_peek();
+Event *event_peek();
 Event event_pop();
 
 Event event_next();
 
 
+uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uint8_t mask);
 
 #endif
