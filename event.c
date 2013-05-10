@@ -189,6 +189,14 @@ ISR(TIMER1_COMPA_vect)
             bs->last_val = v;
         }
 
+        if (bs->last_millis) {
+            if (v && (e.millis - bs->last_millis) > EVENT_TIMING_LONG_CLICK) {
+                e.type = EVENT_LONG_CLICK;
+                event_push(e);
+                bs->last_millis = 0;
+            }
+        }
+
 /*
         Event *be = _find_button_event(i, EVENT_BUTTON_DOWN);
         uint16_t delta = (e.millis - be->millis);
