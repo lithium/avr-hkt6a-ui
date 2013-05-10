@@ -5,15 +5,14 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
 
 
 static uint8_t _cur_channel = 0;
-static int8_t _input = 0.0;
 
-uint8_t *_input_assign = 0;
-
-
-uint8_t _inputs[][2] = {
+static uint8_t _inputs[][2] = {
     {4,0},
     {11,0},
     {15,0},
@@ -22,28 +21,32 @@ uint8_t _inputs[][2] = {
     {15,1},
 };
 #define _inputs_size (sizeof(_inputs)/(sizeof(uint8_t)*2))
-uint8_t _cur_input = 0;
+static uint8_t _cur_input = 0;
 
+
+static int8_t _input = 0.0;
+void *_input_assign = 0;
+int16_t _input_min = 0;
+int16_t _input_max = 120;
 static Screen *_g_screen;
-
 uint8_t _scaler=0;
+
+
 
 void screen_epa_setup(Screen *scr, TxProfile *txp)
 {
-    // _cur_channel = event_analog_state(THR_AXIS);
-
     lcd_printfxy(0,0,"CH    DR:");
     lcd_printfxy(0,1,"EP:");
 
-    lcd_display(0b110); // cursor on and blinking
+    lcd_display(0b101); // cursor off but blinking
 
 
     //setup timer2 for key repeat
+    _g_screen = scr;
     TCCR2A = 0b011;
     TCCR2B = 0b100; // prescale/8
     TIMSK2 |= (1<<TOIE2);
 
-    _g_screen = scr;
 }
 
 void screen_epa_paint(Screen *scr, TxProfile *txp)
@@ -70,7 +73,7 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
     if (e->type == EVENT_ANALOG_DOWN || e->type == EVENT_ANALOG_UP) {
         if (e->v.analog.number == 1) {
 
-            _cur_channel = map(e->v.analog.position, 0, 255, 0, 5);
+            _cur_channel = map(e->v.analog.position, 0, 255, 0, 6);
         }
         else if (e->v.analog.number == 2) {
             if (_cur_input == 0) {
@@ -80,13 +83,37 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
                 if (e->v.analog.position > 128+32)
                     txp->reversed |= (1<<_cur_channel);
             } 
-            else
-            if (_cur_input == 1) {
-                _input = (e->v.analog.position - 128)/16; // -3 .. +3
-                // txp->dual_rate[_cur_channel].on += _input;
-                _input_assign = &(txp->dual_rate[_cur_channel].on);
+            else {
+                _input = (e->v.analog.position - 128)/16; // -7 .. +7
 
-                txp->subtrim[_cur_channel] = _input;
+                switch(_cur_input) {
+                    case 1:
+                        _input_assign = &(txp->dual_rate[_cur_channel].on);
+                        _input_min = 0;
+                        _input_max = 100;
+                        break;
+                    case 2:
+                        _input_assign = &(txp->dual_rate[_cur_channel].off);
+                        _input_min = 0;
+                        _input_max = 100;
+                        break;
+                    case 3:
+                        _input_assign = &(txp->endpoints[_cur_channel].ep1);
+                        _input_min = 0;
+                        _input_max = 120;
+                        break;
+                    case 4:
+                        _input_assign = &(txp->endpoints[_cur_channel].ep2);
+                        _input_min = 0;
+                        _input_max = 120;
+                        break;
+                    case 5:
+                        _input_assign = &(txp->subtrim[_cur_channel]);
+                        _input_min = -127;
+                        _input_max = 127;
+                        break;
+                }
+
             }
         }
     }
@@ -98,29 +125,12 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
         _input_assign = 0;
     }
     else {
-        return; //ignore event
+        return; //ignore any other event
     }
 
     scr->is_dirty=1;
-    /*
-    else
-    if (e->type == EVENT_ANALOG_MAX) {
-        if (_cur_input == 1) { 
-            txp->dual_rate[_cur_channel].on++;
-        }
-    }
-    else
-    if (e->type == EVENT_ANALOG_MIN) {
-        if (_cur_input == 1) {
-            txp->dual_rate[_cur_channel].on--;
-        }
-    }
-    */
-
 }
 
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 ISR(TIMER2_OVF_vect)
 {
@@ -128,10 +138,17 @@ ISR(TIMER2_OVF_vect)
         return;
 
     if (_input && _input_assign) {
+        if (_input_min < 0) {
+            int8_t *assign = (int8_t*)_input_assign;
+            int16_t v = *assign + _input;
+            *assign = MAX(_input_min, MIN(_input_max, v));
+        }
+        else {
+            uint8_t *assign = (int8_t*)_input_assign;
+            int16_t v = *assign + _input;
+            *assign = MAX(_input_min, MIN(_input_max, v));
+        }
 
-        *_input_assign = MAX(0, MIN(100, *_input_assign + _input));
-
-        // *_input_assign += _input;
         _g_screen->is_dirty = 1;
     }
 }
