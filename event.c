@@ -16,6 +16,14 @@ static signed char _event_analog_cur = -1;
 Event InvalidEvent = {EVENT_INVALID, EVENT_INVALID};
 
 
+AnalogState *event_analog_state(uint8_t analog_number)
+{
+    if (analog_number < 1 || analog_number >= EVENT_ANALOG_MAX_COUNT)
+        return 0;
+    return &_event_analogs[analog_number-1];
+}
+
+
 void event_init()
 {
     memset(_event_buttons, 0, sizeof(ButtonState)*EVENT_BUTTON_MAX_COUNT);
@@ -229,6 +237,16 @@ ISR(ADC_vect)
             e.v.analog.number = as->number;
             e.v.analog.position = v;
 
+            if (v == 255) {
+                e.type = EVENT_ANALOG_MAX;
+                event_push(e);
+            }
+            else
+            if (v == 0) {
+                e.type = EVENT_ANALOG_MIN;
+                event_push(e);
+            }
+            else
             if (v > as->val) {
                 e.type = EVENT_ANALOG_UP;
                 event_push(e);

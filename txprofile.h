@@ -31,7 +31,7 @@ typedef struct {
         uint8_t ep1;
         uint8_t ep2;
     } endpoints[NUM_CHANNELS];
-    uint8_t subtrim[NUM_CHANNELS];
+    int8_t subtrim[NUM_CHANNELS];
     uint8_t switch_a : 2;
     uint8_t switch_b : 2;
     struct {

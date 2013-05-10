@@ -16,6 +16,7 @@
 
 #define EVENT_TIMING_DOUBLE_CLICK 300
 #define EVENT_TIMING_LONG_CLICK 1500
+#define EVENT_ANALOG_MINMAX_THRESHOLD 1
 
 typedef enum {
     EVENT_INVALID=0,
@@ -24,6 +25,8 @@ typedef enum {
     EVENT_LONG_CLICK,
     EVENT_ANALOG_UP,
     EVENT_ANALOG_DOWN,
+    EVENT_ANALOG_MIN,
+    EVENT_ANALOG_MAX,
     EVENT_NUM
 } EventType;
 
@@ -81,6 +84,7 @@ uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uin
 uint8_t event_register_analog(uint8_t analog_number, uint8_t channel);
 
 
+AnalogState *event_analog_state(uint8_t analog_number);
 
 
 #endif

@@ -8,7 +8,9 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 
 
 static uint8_t _cur_channel = 0;
-static int8_t _tmp = 0.0;
+static int8_t _input = 0.0;
+
+uint8_t *_input_assign = 0;
 
 
 uint8_t _inputs[][2] = {
@@ -22,6 +24,10 @@ uint8_t _inputs[][2] = {
 #define _inputs_size (sizeof(_inputs)/(sizeof(uint8_t)*2))
 uint8_t _cur_input = 0;
 
+static Screen *_g_screen;
+
+uint8_t _scaler=0;
+
 void screen_epa_setup(Screen *scr, TxProfile *txp)
 {
     // _cur_channel = event_analog_state(THR_AXIS);
@@ -29,7 +35,15 @@ void screen_epa_setup(Screen *scr, TxProfile *txp)
     lcd_printfxy(0,0,"CH    DR:");
     lcd_printfxy(0,1,"EP:");
 
-    lcd_display(0b101); // cursor on and blinking
+    lcd_display(0b110); // cursor on and blinking
+
+
+    //setup timer2 for key repeat
+    TCCR2A = 0b011;
+    TCCR2B = 0b100; // prescale/8
+    TIMSK2 |= (1<<TOIE2);
+
+    _g_screen = scr;
 }
 
 void screen_epa_paint(Screen *scr, TxProfile *txp)
@@ -57,15 +71,67 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
         if (e->v.analog.number == 1) {
 
             _cur_channel = map(e->v.analog.position, 0, 255, 0, 5);
-            scr->is_dirty=1;
+        }
+        else if (e->v.analog.number == 2) {
+            if (_cur_input == 0) {
+                if (e->v.analog.position < 128-32)
+                    txp->reversed &= ~(1<<_cur_channel);
+                else
+                if (e->v.analog.position > 128+32)
+                    txp->reversed |= (1<<_cur_channel);
+            } 
+            else
+            if (_cur_input == 1) {
+                _input = (e->v.analog.position - 128)/16; // -3 .. +3
+                // txp->dual_rate[_cur_channel].on += _input;
+                _input_assign = &(txp->dual_rate[_cur_channel].on);
+
+                txp->subtrim[_cur_channel] = _input;
+            }
         }
     }
-
+    else
     if (e->type == EVENT_CLICK) {
         if (++_cur_input >= _inputs_size) {
             _cur_input = 0;
         }
-        scr->is_dirty=1;
+        _input_assign = 0;
+    }
+    else {
+        return; //ignore event
     }
 
+    scr->is_dirty=1;
+    /*
+    else
+    if (e->type == EVENT_ANALOG_MAX) {
+        if (_cur_input == 1) { 
+            txp->dual_rate[_cur_channel].on++;
+        }
+    }
+    else
+    if (e->type == EVENT_ANALOG_MIN) {
+        if (_cur_input == 1) {
+            txp->dual_rate[_cur_channel].on--;
+        }
+    }
+    */
+
+}
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+ISR(TIMER2_OVF_vect)
+{
+    if (++_scaler) 
+        return;
+
+    if (_input && _input_assign) {
+
+        *_input_assign = MAX(0, MIN(100, *_input_assign + _input));
+
+        // *_input_assign += _input;
+        _g_screen->is_dirty = 1;
+    }
 }
