@@ -36,6 +36,13 @@ typedef struct {
 typedef struct {
     uint8_t number;
 } ButtonEvent;
+typedef struct {
+    volatile uint8_t *port;
+    volatile uint8_t mask;
+    uint8_t val;
+    uint8_t last_val;
+} ButtonState;
+
 
 typedef struct {
     uint8_t id;
@@ -47,7 +54,9 @@ typedef struct {
 } Event;
 
 
+
 extern Event InvalidEvent;
+extern ButtonState _event_buttons[];
 
 
 void event_init();

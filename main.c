@@ -27,11 +27,11 @@ void paint(void);
 
 int main(void) 
 {
+    sei();
 
+    //indicator led
     DDRB |= _BV(PB5);
     LED_OFF();
-
-    sei();
 
 
     millis_init();
@@ -42,15 +42,15 @@ int main(void)
     //pushbutton on PB4
     DDRB &= ~_BV(4); //input pin
     PORTB &= ~_BV(4); // turn off pull up
-    event_register_button(1,&PORTB,_BV(PB4));
+    event_register_button(1,&PINB,_BV(PB4));
 
 
     //setup ADC 
-    // prescaler: 128
-    ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0)| (1<<ADEN);
+    // prescaler: 128, 8 bit mode
+    ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0)| (1<<ADIE);
     ADMUX = (1<<REFS0)|(1<<ADLAR);
     //trigger one conversion for interrupt
-    ADCSRA |= (1<<ADIE)|(1<<ADSC);
+    // ADCSRA |= (1<<ADEN)|(1<<ADSC);
 
 
     LED_ON();
@@ -63,13 +63,18 @@ int main(void)
     lcd_write("A1:");
 
     for (;;) {
+        // g_button = _event_buttons[0].val;
         if (g_dirty) {
             frame++;
             paint();
             g_dirty = 0;
         }
-        Event *e = event_peek();
-        // if ()
+
+        if (event_peek()) {
+            Event e = event_pop();
+            g_button = e.type;
+            g_dirty = 1;
+        }
 
         sleep_enable();
         sleep_cpu();
@@ -91,9 +96,9 @@ void paint()
     lcd_cursor(3,1);
     lcd_write(buf);
 
-    // sprintf(buf, "f:%03d", frame);
-    // lcd_cursor(10,0);
-    // lcd_write(buf);
+    sprintf(buf, "f:%03d", frame);
+    lcd_cursor(10,0);
+    lcd_write(buf);
 
     sprintf(buf, "c:%03d", g_button);
     lcd_cursor(10,1);
@@ -126,7 +131,6 @@ ISR(ADC_vect)
 ISR(TIMER1_COMPA_vect)
 {
     ADCSRA |= ((1<<ADSC)|(1<<ADEN));
-
     uint8_t v = (PINB & _BV(4));
     if (v != g_button) {
         // edge trigger

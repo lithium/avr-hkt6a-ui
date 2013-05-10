@@ -4,19 +4,15 @@
 
 static uint8_t _event_id_counter=0;
 static Event _event_queue[EVENT_QUEUE_MAX_SIZE];
-static signed char _event_queue_head=-1;
+static signed char _event_queue_head=0;
 static signed char _event_queue_tail=0;
+static uint8_t _event_queue_size=0;
+
 
 Event InvalidEvent = {EVENT_INVALID, EVENT_INVALID};
 
 
-typedef struct {
-    volatile uint8_t *port;
-    volatile uint8_t mask;
-    uint8_t val;
-} PortPin;
-
-static PortPin _event_buttons[EVENT_BUTTON_MAX_COUNT];
+ButtonState _event_buttons[EVENT_BUTTON_MAX_COUNT];
 
 
 void event_init()
@@ -42,9 +38,8 @@ Event _create_event(EventType type)
 uint8_t event_push(Event e)
 {
     // queue is full
-    if (_event_queue_head == _event_queue_tail) {
+    if (_event_queue_size >= EVENT_QUEUE_MAX_SIZE)
         return EVENT_INVALID;
-    }
 
 
     if (e.id == EVENT_INVALID) {
@@ -52,6 +47,7 @@ uint8_t event_push(Event e)
     }
 
     _event_queue[_event_queue_tail] = e;
+    _event_queue_size++;
     if (++_event_queue_tail >= EVENT_QUEUE_MAX_SIZE) {
         _event_queue_tail = 0;
     }
@@ -59,17 +55,15 @@ uint8_t event_push(Event e)
     return e.id;
 }
 
-Event *_event_visible(Event *e)
-{
-    if (e && e->type > EVENT_BUTTON_UP) 
-        return e;
-    return 0;
-}
 Event *event_peek()
 {
-    if (_event_queue_head == -1)
-        _event_queue_head = 0;
-    return &(_event_queue[_event_queue_head]);
+    if (_event_queue_size < 1)
+        return 0;
+    
+    Event *e = &_event_queue[_event_queue_head];
+    if (e->type != EVENT_INVALID) 
+        return e;
+    return 0;
 }
 Event event_pop()
 {
@@ -78,11 +72,14 @@ Event event_pop()
     if (!e || e->id == EVENT_INVALID) 
         return InvalidEvent;
 
+    Event ret = *e;
+
     _event_queue[_event_queue_head] = InvalidEvent;
+    _event_queue_size--;
     if (++_event_queue_head >= EVENT_QUEUE_MAX_SIZE) {
         _event_queue_head = 0;
     }
-    return *e;
+    return ret;
 }
 
 
@@ -112,19 +109,19 @@ Event event_next()
 //     } 
 //     return 0;
 // }
-Event *_find_button_event(uint8_t button_no, EventType button_type)
-{
-    uint8_t i;
-    for (i=_event_queue_head; i<=_event_queue_tail; ) {
-        Event *e = &_event_queue[i] ;
-        if (e->type == button_type && e->v.button.number == button_no) {
-            return e;
-        }
+// Event *_find_button_event(uint8_t button_no, EventType button_type)
+// {
+//     uint8_t i;
+//     for (i=_event_queue_head; i<=_event_queue_tail; ) {
+//         Event *e = &_event_queue[i] ;
+//         if (e->type == button_type && e->v.button.number == button_no) {
+//             return e;
+//         }
 
-        if (++i >= EVENT_QUEUE_MAX_SIZE) i=0;
-    } 
-    return 0;
-}
+//         if (++i >= EVENT_QUEUE_MAX_SIZE) i=0;
+//     } 
+//     return 0;
+// }
 
 
 /*
@@ -143,31 +140,43 @@ uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uin
 
     _event_buttons[button_number].port = port;
     _event_buttons[button_number].mask = mask;
+    _event_buttons[button_number].val = 0;
+    _event_buttons[button_number].last_val = 0;
 
 
     return button_number+1;
 }
 
+
+extern uint8_t g_button;
 extern uint8_t g_dirty;
 
-#include <avr/delay.h>
 
 ISR(TIMER1_COMPA_vect)
-//ISR(PCINT0_vect)
 {
     ADCSRA |= ((1<<ADSC)|(1<<ADEN));
 
     // read button states 
     uint8_t i;
     for (i=0; i < EVENT_BUTTON_MAX_COUNT; i++) {
-        uint8_t v = *_event_buttons[i].port & _event_buttons[i].mask;
-        uint8_t oldval = _event_buttons[i].val;
-        _event_buttons[i].val = v;
+        ButtonState *bs = &_event_buttons[i];
+        if (!bs->port) 
+            continue;
+        uint8_t v = *(bs->port) & (bs->mask);
+        bs->val = v;
+        // uint8_t oldval = bs->val;
 
-        Event e = _create_event(EVENT_INVALID);
-        e.v.button.number = i;
+        if (v != bs->last_val) {
+            bs->last_val = v;
 
-        e.type = EVENT_CLICK;
+
+            Event e = _create_event(v ? EVENT_BUTTON_DOWN : EVENT_BUTTON_UP);
+            e.v.button.number = i;
+            event_push(e);
+
+            // g_button = e.type;
+            // g_dirty=1;
+        }
 
 /*
         Event *be = _find_button_event(i, EVENT_BUTTON_DOWN);
@@ -199,7 +208,6 @@ ISR(TIMER1_COMPA_vect)
         }
 
         if (v) {
-
             if (be && delta > EVENT_TIMING_LONG_CLICK) {
                 be->type = EVENT_LONG_CLICK;
             }
@@ -212,13 +220,6 @@ ISR(TIMER1_COMPA_vect)
         }
         */
     }
-
-    // if (g_dirty) {
-        // PORTB &= ~_BV(5);
-        // _delay_ms(500);
-        // PORTB |= _BV(5);
-        event_push(_create_event(EVENT_PAINT));
-    // }
 
 
 }
