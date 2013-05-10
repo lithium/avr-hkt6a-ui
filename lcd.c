@@ -69,7 +69,7 @@ void lcd_home()
 
 void lcd_display(uint8_t cb_bits)
 {
-    lcd_cmd(0b1100 | (cb_bits & 0b0011));
+    lcd_cmd(0b1000 | (cb_bits & 0b0111));
 }
 
 void lcd_cursor(uint8_t col, uint8_t row)
@@ -133,6 +133,6 @@ void lcd_printfxy(uint8_t x, uint8_t y, const char *fmt, ...)
     va_start(args,fmt);
     vsnprintf(_print_buffer, 16, fmt, args);
     va_end(args);
-    
+
     lcd_write(_print_buffer);
 }
