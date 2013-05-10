@@ -4,6 +4,7 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include "millis.h"
+#include <string.h>
 
 
 
@@ -14,7 +15,7 @@
 
 
 #define EVENT_TIMING_DOUBLE_CLICK 300
-#define EVENT_TIMING_LONG_CLICK 1800
+#define EVENT_TIMING_LONG_CLICK 1500
 
 typedef enum {
     EVENT_INVALID=0,

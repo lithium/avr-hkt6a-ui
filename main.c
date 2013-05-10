@@ -11,7 +11,13 @@
 #include "lcd.h"
 #include "millis.h"
 #include "event.h"
+#include "screen.h"
 
+
+int frame=0;
+Screen screen;
+TxProfile profile;
+/*
 static uint8_t g_cur_pot=0;
 #define g_n_pots 2
 static uint8_t g_pots[g_n_pots] = {0,0};
@@ -21,9 +27,9 @@ uint8_t g_dirty=1;
 
 #define LONG_PRESS_MILLIS 1500
 
-int frame=0;
 
 void paint(void);
+*/
 
 int main(void) 
 {
@@ -52,37 +58,51 @@ int main(void)
     LED_ON();
 
 
+    memset(&profile, 0, sizeof(TxProfile));
+    memset(&screen, 0, sizeof(Screen));
 
-    lcd_cursor(0,0);
-    lcd_write("A0:");
-    lcd_cursor(0,1);
-    lcd_write("A1:");
+
+    memcpy(&screen, &ScreenTable[0], sizeof(Screen));
+    screen.is_dirty = 1;
+    screen.setup_func(&screen, &profile);
+
+    // lcd_cursor(0,0);
+    // lcd_write("A0:");
+    // lcd_cursor(0,1);
+    // lcd_write("A1:");
 
     for (;;) {
         if (event_peek()) {
             Event e = event_pop();
-            g_button = e.type;
-            if (e.type == EVENT_ANALOG_UP) {
-            //     int16_t v = g_pots[e.v.analog.number-1] + 1;
-            //     if (v > 255) 
-            //         v = 255;
-                g_pots[e.v.analog.number-1] = e.v.analog.position;
-            }
-            else 
-            if (e.type == EVENT_ANALOG_DOWN) {
-            //     int16_t v = g_pots[e.v.analog.number-1] - 1;
-            //     if (v < 0);
-            //         v = 0;
-                g_pots[e.v.analog.number-1] = e.v.analog.position;
-            }
-            g_dirty = 1;
+            screen.event_func(&screen, &profile, &e);
+            // g_button = e.type;
+            // if (e.type == EVENT_ANALOG_UP) {
+            // //     int16_t v = g_pots[e.v.analog.number-1] + 1;
+            // //     if (v > 255) 
+            // //         v = 255;
+            //     g_pots[e.v.analog.number-1] = e.v.analog.position;
+            // }
+            // else 
+            // if (e.type == EVENT_ANALOG_DOWN) {
+            // //     int16_t v = g_pots[e.v.analog.number-1] - 1;
+            // //     if (v < 0);
+            // //         v = 0;
+            //     g_pots[e.v.analog.number-1] = e.v.analog.position;
+            // }
+            // g_dirty = 1;
         }
 
-        if (g_dirty) {
+        if (screen.is_dirty) {
             frame++;
-            paint();
-            g_dirty = 0;
+            screen.paint_func(&screen, &profile);
+            screen.is_dirty = 0;
         }
+        // paint();
+        // if (g_dirty) {
+        //     frame++;
+        //     paint();
+        //     g_dirty = 0;
+        // }
 
 
         sleep_enable();
@@ -94,25 +114,27 @@ int main(void)
     return 0;
 }
 
-void paint()
-{
-    static char buf[10];
-    sprintf(buf, "%03d", g_pots[0]);
-    lcd_cursor(3,0);
-    lcd_write(buf);
+// void paint()
+// {
+//     // static char buf[10];
+//     // sprintf(buf, "%03d", screen.is_dirty);
+//     // lcd_cursor(11,1);
+//     // lcd_write(buf);
+//     lcd_printfxy(11,1,"%03d", screen.is_dirty);
+// }
 
-    sprintf(buf, "%03d", g_pots[1]);
-    lcd_cursor(3,1);
-    lcd_write(buf);
+//     sprintf(buf, "%03d", g_pots[1]);
+//     lcd_cursor(3,1);
+//     lcd_write(buf);
 
-    sprintf(buf, "f:%03d", frame);
-    lcd_cursor(10,0);
-    lcd_write(buf);
+//     sprintf(buf, "f:%03d", frame);
+//     lcd_cursor(10,0);
+//     lcd_write(buf);
 
-    sprintf(buf, "c:%03d", g_button);
-    lcd_cursor(10,1);
-    lcd_write(buf);
-}
+//     sprintf(buf, "c:%03d", g_button);
+//     lcd_cursor(10,1);
+//     lcd_write(buf);
+// }
 
 // ISR(ADC_vect)
 // {

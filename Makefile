@@ -5,7 +5,7 @@ TARGET_ARCH	= -mmcu=atmega328p
 F_CPU		= 16000000
 
 
-OBJECTS		= main.o lcd.o millis.o event.o
+OBJECTS		= main.o lcd.o millis.o event.o screentable.o
 
 
 AVRDUDE_PROGRAMMER = arduino
