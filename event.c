@@ -9,20 +9,28 @@ static signed char _event_queue_tail=0;
 static uint8_t _event_queue_size=0;
 
 static ButtonState _event_buttons[EVENT_BUTTON_MAX_COUNT];
+static AnalogState _event_analogs[EVENT_ANALOG_MAX_COUNT];
+static signed char _event_analog_cur = -1;
 
 
 Event InvalidEvent = {EVENT_INVALID, EVENT_INVALID};
 
 
-
-
 void event_init()
 {
+    memset(_event_buttons, 0, sizeof(ButtonState)*EVENT_BUTTON_MAX_COUNT);
+    memset(_event_analogs, 0, sizeof(AnalogState)*EVENT_ANALOG_MAX_COUNT);
+
     //set up timer 1 for input resolution
     TCCR1A = (1<<WGM12); //CTC
     TCCR1B = 0b010; // divide by 64
     OCR1A = 10; //~100ms
     TIMSK1 |= (1<<OCIE1A);
+
+    //setup ADC 
+    // prescaler: 128, 8 bit mode
+    ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0)| (1<<ADIE);
+    ADMUX = (1<<REFS0)|(1<<ADLAR);
 }
 
 
@@ -101,32 +109,56 @@ Event event_next()
  * buttons are 1-indexed.
  * 
  */
-uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uint8_t mask)
+uint8_t event_register_button(uint8_t button_no, volatile uint8_t *port, uint8_t mask)
 {
-    button_number--;
-    if (button_number >= EVENT_BUTTON_MAX_COUNT) {
+    button_no--;
+    if (button_no >= EVENT_BUTTON_MAX_COUNT) {
        return 0;
     }
 
-    _event_buttons[button_number].port = port;
-    _event_buttons[button_number].mask = mask;
-    _event_buttons[button_number].val = 0;
-    _event_buttons[button_number].last_val = 0;
-    _event_buttons[button_number].last_millis = 0;
+    _event_buttons[button_no].port = port;
+    _event_buttons[button_no].mask = mask;
+    _event_buttons[button_no].val = 0;
+    _event_buttons[button_no].last_val = 0;
+    _event_buttons[button_no].last_millis = 0;
 
 
-    return button_number+1;
+    return button_no+1;
 }
 
 
-extern uint8_t g_button;
-extern uint8_t g_dirty;
+uint8_t event_register_analog(uint8_t analog_no, uint8_t channel)
+{
+    analog_no--;
+    if (analog_no >= EVENT_ANALOG_MAX_COUNT) {
+       return 0;
+    }
+
+    _event_analogs[analog_no].number = analog_no+1;
+    _event_analogs[analog_no].channel = channel;
+
+    // this is the first one, so set up channel to start sampling
+    if (_event_analog_cur < 0) {
+        _event_analog_cur = analog_no;
+        ADMUX = (ADMUX&0xF0) | (channel & 0x0F);
+    }
+
+
+    return analog_no+1;
+
+}
+
+
+
+// extern uint8_t g_button;
+// extern uint8_t g_dirty;
 
 
 ISR(TIMER1_COMPA_vect)
 {
     //trigger a read of ADC states
-    ADCSRA |= ((1<<ADSC)|(1<<ADEN));
+    if (_event_analog_cur >= 0)
+        ADCSRA |= ((1<<ADSC)|(1<<ADEN));
 
     // read button states 
     uint8_t i;
@@ -179,3 +211,46 @@ ISR(TIMER1_COMPA_vect)
 
 
 }
+
+ISR(ADC_vect)
+{
+    if (_event_analog_cur < 0) 
+        return;
+
+    cli();
+    uint8_t v = ADCH;
+    sei();
+
+    AnalogState *as = &_event_analogs[_event_analog_cur];
+    if (as->number) {
+
+        if (v != as->val) {
+            Event e = _create_event(EVENT_INVALID);
+            e.v.analog.number = as->number;
+            e.v.analog.position = v;
+
+            if (v > as->val) {
+                e.type = EVENT_ANALOG_UP;
+                event_push(e);
+            }
+            else {
+                e.type = EVENT_ANALOG_DOWN;
+                event_push(e);
+            }
+
+            as->val = v;
+        }
+    }
+
+
+    if (++_event_analog_cur >= EVENT_ANALOG_MAX_COUNT) {
+        _event_analog_cur = 0;
+        // turn off ADC interrupts until next TIMER1 
+        ADCSRA &= ~((1<<ADSC)|(1<<ADEN));
+    }
+
+    // switch input pin, for next time
+    uint8_t next_channel = _event_analogs[_event_analog_cur].channel;
+    ADMUX = (ADMUX&0xF0) | (next_channel & 0x0F);
+}
+

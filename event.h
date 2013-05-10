@@ -8,6 +8,7 @@
 
 
 #define EVENT_BUTTON_MAX_COUNT 1
+#define EVENT_ANALOG_MAX_COUNT 2
 
 #define EVENT_QUEUE_MAX_SIZE 5
 
@@ -17,20 +18,24 @@
 
 typedef enum {
     EVENT_INVALID=0,
-    EVENT_BUTTON_DOWN,
-    EVENT_BUTTON_UP,
     EVENT_CLICK,
     EVENT_DOUBLE_CLICK,
     EVENT_LONG_CLICK,
-    EVENT_PAINT,
+    EVENT_ANALOG_UP,
+    EVENT_ANALOG_DOWN,
     EVENT_NUM
 } EventType;
 
 
 typedef struct {
-    uint8_t axis;
-    uint8_t value;
-} MotionEvent;
+    uint8_t number;
+    int16_t position;
+} AnalogEvent;
+typedef struct {
+    uint8_t number;
+    uint8_t channel;
+    uint8_t val;
+} AnalogState;
 
 
 typedef struct {
@@ -51,6 +56,7 @@ typedef struct {
     uint16_t millis;
     union {
         ButtonEvent button;
+        AnalogEvent analog;
     } v;
 } Event;
 
@@ -71,5 +77,9 @@ Event event_next();
 
 
 uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uint8_t mask);
+uint8_t event_register_analog(uint8_t analog_number, uint8_t channel);
+
+
+
 
 #endif

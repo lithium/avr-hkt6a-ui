@@ -14,7 +14,7 @@
 
 static uint8_t g_cur_pot=0;
 #define g_n_pots 2
-static uint8_t g_pots[g_n_pots];
+static uint8_t g_pots[g_n_pots] = {0,0};
 uint8_t g_button=0;
 
 uint8_t g_dirty=1;
@@ -44,13 +44,9 @@ int main(void)
     PORTB &= ~_BV(4); // turn off pull up
     event_register_button(1,&PINB,_BV(PB4));
 
+    event_register_analog(1,0);
+    event_register_analog(2,1);
 
-    //setup ADC 
-    // prescaler: 128, 8 bit mode
-    ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0)| (1<<ADIE);
-    ADMUX = (1<<REFS0)|(1<<ADLAR);
-    //trigger one conversion for interrupt
-    // ADCSRA |= (1<<ADEN)|(1<<ADSC);
 
 
     LED_ON();
@@ -66,6 +62,19 @@ int main(void)
         if (event_peek()) {
             Event e = event_pop();
             g_button = e.type;
+            if (e.type == EVENT_ANALOG_UP) {
+            //     int16_t v = g_pots[e.v.analog.number-1] + 1;
+            //     if (v > 255) 
+            //         v = 255;
+                g_pots[e.v.analog.number-1] = e.v.analog.position;
+            }
+            else 
+            if (e.type == EVENT_ANALOG_DOWN) {
+            //     int16_t v = g_pots[e.v.analog.number-1] - 1;
+            //     if (v < 0);
+            //         v = 0;
+                g_pots[e.v.analog.number-1] = e.v.analog.position;
+            }
             g_dirty = 1;
         }
 
@@ -105,27 +114,27 @@ void paint()
     lcd_write(buf);
 }
 
-ISR(ADC_vect)
-{
-    cli();
-    uint8_t v = ADCH;
-    sei();
+// ISR(ADC_vect)
+// {
+//     cli();
+//     uint8_t v = ADCH;
+//     sei();
 
-    if (v != g_pots[g_cur_pot]) {
-        g_pots[g_cur_pot] = v;
-        g_dirty = 1;
-    }
+//     if (v != g_pots[g_cur_pot]) {
+//         g_pots[g_cur_pot] = v;
+//         g_dirty = 1;
+//     }
 
 
-    if (++g_cur_pot >= g_n_pots) {
-        g_cur_pot = 0;
-        // turn off ADC interrupts until next TIMER1 
-        ADCSRA &= ~((1<<ADSC)|(1<<ADEN));
-    }
+//     if (++g_cur_pot >= g_n_pots) {
+//         g_cur_pot = 0;
+//         // turn off ADC interrupts until next TIMER1 
+//         ADCSRA &= ~((1<<ADSC)|(1<<ADEN));
+//     }
 
-    // switch input pin
-    ADMUX = (ADMUX&0xF0) | (g_cur_pot & 0x0F);
-}
+//     // switch input pin
+//     ADMUX = (ADMUX&0xF0) | (g_cur_pot & 0x0F);
+// }
 
 /*
 ISR(TIMER1_COMPA_vect)
