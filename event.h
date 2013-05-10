@@ -41,6 +41,7 @@ typedef struct {
     volatile uint8_t mask;
     uint8_t val;
     uint8_t last_val;
+    uint16_t last_millis;
 } ButtonState;
 
 

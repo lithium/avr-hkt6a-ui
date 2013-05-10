@@ -59,7 +59,7 @@ Event *event_peek()
 {
     if (_event_queue_size < 1)
         return 0;
-    
+
     Event *e = &_event_queue[_event_queue_head];
     if (e->type != EVENT_INVALID) 
         return e;
@@ -142,6 +142,7 @@ uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uin
     _event_buttons[button_number].mask = mask;
     _event_buttons[button_number].val = 0;
     _event_buttons[button_number].last_val = 0;
+    _event_buttons[button_number].last_millis = 0;
 
 
     return button_number+1;
@@ -166,16 +167,26 @@ ISR(TIMER1_COMPA_vect)
         bs->val = v;
         // uint8_t oldval = bs->val;
 
+        Event e = _create_event(EVENT_INVALID);
+        e.v.button.number = i;
+
         if (v != bs->last_val) {
+            if (v) {
+                //down trigger
+                if (bs->last_millis && (e.millis - bs->last_millis) < EVENT_TIMING_DOUBLE_CLICK) {
+                    e.type = EVENT_DOUBLE_CLICK;
+                    event_push(e);
+                    bs->last_millis = 0;
+                } 
+                else {
+                    bs->last_millis = e.millis;
+                }
+            }
+            else {
+                // e.type = EVENT_BUTTON_UP;
+            }
+
             bs->last_val = v;
-
-
-            Event e = _create_event(v ? EVENT_BUTTON_DOWN : EVENT_BUTTON_UP);
-            e.v.button.number = i;
-            event_push(e);
-
-            // g_button = e.type;
-            // g_dirty=1;
         }
 
 /*
