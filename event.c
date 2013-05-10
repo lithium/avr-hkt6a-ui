@@ -8,11 +8,12 @@ static signed char _event_queue_head=0;
 static signed char _event_queue_tail=0;
 static uint8_t _event_queue_size=0;
 
+static ButtonState _event_buttons[EVENT_BUTTON_MAX_COUNT];
+
 
 Event InvalidEvent = {EVENT_INVALID, EVENT_INVALID};
 
 
-ButtonState _event_buttons[EVENT_BUTTON_MAX_COUNT];
 
 
 void event_init()
@@ -85,44 +86,13 @@ Event event_pop()
 
 Event event_next()
 {
-    Event *e = event_peek();
-
-    while (!e || e->id == EVENT_INVALID) {
+    while (!event_peek()) {
         sleep_enable();
         sleep_cpu();
         sleep_disable();
-        e = event_peek();
     }
     return event_pop();
 }
-
-
-// Event *_find_visible_event()
-// {
-//     uint8_t i;
-//     for (i=_event_queue_head; i<=_event_queue_tail; ) {
-//         Event *e = &_event_queue[i] ;
-//         if (e->type > EVENT_BUTTON_UP) {
-//             return e;
-//         }
-//         if (++i >= EVENT_QUEUE_MAX_SIZE) i=0;
-//     } 
-//     return 0;
-// }
-// Event *_find_button_event(uint8_t button_no, EventType button_type)
-// {
-//     uint8_t i;
-//     for (i=_event_queue_head; i<=_event_queue_tail; ) {
-//         Event *e = &_event_queue[i] ;
-//         if (e->type == button_type && e->v.button.number == button_no) {
-//             return e;
-//         }
-
-//         if (++i >= EVENT_QUEUE_MAX_SIZE) i=0;
-//     } 
-//     return 0;
-// }
-
 
 /*
  * event_register_button - Register a port/pin with a button number.
@@ -155,6 +125,7 @@ extern uint8_t g_dirty;
 
 ISR(TIMER1_COMPA_vect)
 {
+    //trigger a read of ADC states
     ADCSRA |= ((1<<ADSC)|(1<<ADEN));
 
     // read button states 
@@ -165,14 +136,13 @@ ISR(TIMER1_COMPA_vect)
             continue;
         uint8_t v = *(bs->port) & (bs->mask);
         bs->val = v;
-        // uint8_t oldval = bs->val;
 
         Event e = _create_event(EVENT_INVALID);
         e.v.button.number = i;
 
         if (v != bs->last_val) {
             if (v) {
-                //down trigger
+                // e.type = EVENT_BUTTON_DOWN;
                 if (bs->last_millis && (e.millis - bs->last_millis) < EVENT_TIMING_DOUBLE_CLICK) {
                     e.type = EVENT_DOUBLE_CLICK;
                     event_push(e);
@@ -190,54 +160,21 @@ ISR(TIMER1_COMPA_vect)
         }
 
         if (bs->last_millis) {
-            if (v && (e.millis - bs->last_millis) > EVENT_TIMING_LONG_CLICK) {
-                e.type = EVENT_LONG_CLICK;
-                event_push(e);
-                bs->last_millis = 0;
-            }
-        }
-
-/*
-        Event *be = _find_button_event(i, EVENT_BUTTON_DOWN);
-        uint16_t delta = (e.millis - be->millis);
-
-        if (v != oldval) {
             if (v) {
-                // down edge trigger
-                if (be && (delta < EVENT_TIMING_DOUBLE_CLICK)) {
-                    be->type = EVENT_DOUBLE_CLICK;
-                } else {
-                    e.type = EVENT_BUTTON_DOWN;
+                if (e.millis - bs->last_millis > EVENT_TIMING_LONG_CLICK) {
+                    e.type = EVENT_LONG_CLICK;
                     event_push(e);
+                    bs->last_millis = 0;
                 }
             } else {
-                // up edge trigger
-                if (be) {
-                    if (delta < EVENT_TIMING_DOUBLE_CLICK) {
-                        //this could still be a double click...
-                        be->type = EVENT_BUTTON_UP;
-                    }
-                    else {
-                        be->type = EVENT_CLICK;
-                    }
-                } else {
-                    //this shouldn't happen...
+                if (e.millis - bs->last_millis > EVENT_TIMING_DOUBLE_CLICK) {
+                    e.type = EVENT_CLICK;
+                    event_push(e);
+                    bs->last_millis = 0;
                 }
             }
         }
 
-        if (v) {
-            if (be && delta > EVENT_TIMING_LONG_CLICK) {
-                be->type = EVENT_LONG_CLICK;
-            }
-        } 
-        else {
-            be = _find_button_event(i, EVENT_BUTTON_UP);
-            if (e.millis - be->millis > EVENT_TIMING_DOUBLE_CLICK) {
-                be->type = EVENT_CLICK;
-            }
-        }
-        */
     }
 
 

@@ -57,7 +57,6 @@ typedef struct {
 
 
 extern Event InvalidEvent;
-extern ButtonState _event_buttons[];
 
 
 void event_init();

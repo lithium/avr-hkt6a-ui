@@ -63,18 +63,18 @@ int main(void)
     lcd_write("A1:");
 
     for (;;) {
-        // g_button = _event_buttons[0].val;
+        if (event_peek()) {
+            Event e = event_pop();
+            g_button = e.type;
+            g_dirty = 1;
+        }
+
         if (g_dirty) {
             frame++;
             paint();
             g_dirty = 0;
         }
 
-        if (event_peek()) {
-            Event e = event_pop();
-            g_button = e.type;
-            g_dirty = 1;
-        }
 
         sleep_enable();
         sleep_cpu();
