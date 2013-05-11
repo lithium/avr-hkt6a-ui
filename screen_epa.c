@@ -16,9 +16,9 @@ static uint8_t _inputs[][2] = {
     {4,0},
     {9,0},
     {13,0},
-    {5,1},
-    {9,1},
-    {15,1},
+    {3,1},
+    {7,1},
+    {13,1},
 };
 #define _inputs_size (sizeof(_inputs)/(sizeof(uint8_t)*2))
 static uint8_t _cur_input = 0;
@@ -44,7 +44,7 @@ void screen_epa_setup(Screen *scr, TxProfile *txp)
     //setup timer2 for key repeat
     _g_screen = scr;
     TCCR2A = 0b011;
-    TCCR2B = 0b100; // prescale/8
+    TCCR2B = 0b101; // prescale
     TIMSK2 |= (1<<TOIE2);
 
 }
@@ -91,6 +91,8 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
             else {
                 _input = (e->v.analog.position - 128)/16; // -7 .. +7
 
+                txp->subtrim[_cur_channel] = _input;
+
                 switch(_cur_input) {
                     case 1:
                         _input_assign = &(txp->dual_rate[_cur_channel].on);
@@ -118,6 +120,7 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
                         _input_max = 127;
                         break;
                 }
+                // _assign_input();
 
             }
         }
@@ -136,12 +139,8 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
     scr->is_dirty=1;
 }
 
-
-ISR(TIMER2_OVF_vect)
+void _assign_input()
 {
-    if (++_scaler) 
-        return;
-
     if (_input && _input_assign) {
         if (_input_min < 0) {
             int8_t *assign = (int8_t*)_input_assign;
@@ -156,4 +155,13 @@ ISR(TIMER2_OVF_vect)
 
         _g_screen->is_dirty = 1;
     }
+ 
+}
+
+
+ISR(TIMER2_OVF_vect)
+{
+    if (++_scaler) 
+        return;
+    _assign_input();
 }
