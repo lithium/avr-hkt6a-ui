@@ -14,8 +14,8 @@ static uint8_t _cur_channel = 0;
 
 static uint8_t _inputs[][2] = {
     {4,0},
-    {11,0},
-    {15,0},
+    {9,0},
+    {13,0},
     {5,1},
     {9,1},
     {15,1},
@@ -46,6 +46,11 @@ void screen_epa_setup(Screen *scr, TxProfile *txp)
     TCCR2A = 0b011;
     TCCR2B = 0b100; // prescale/8
     TIMSK2 |= (1<<TOIE2);
+
+}
+void screen_epa_destroy(Screen *scr, TxProfile *txp)
+{
+    TIMSK2 &= ~(1<<TOIE2);
 
 }
 
@@ -144,7 +149,7 @@ ISR(TIMER2_OVF_vect)
             *assign = MAX(_input_min, MIN(_input_max, v));
         }
         else {
-            uint8_t *assign = (int8_t*)_input_assign;
+            uint8_t *assign = (uint8_t*)_input_assign;
             int16_t v = *assign + _input;
             *assign = MAX(_input_min, MIN(_input_max, v));
         }

@@ -7,15 +7,23 @@
 
 typedef struct Screen_struct Screen;
 
-struct Screen_struct {
+typedef struct {
     void (*setup_func)(Screen *, TxProfile *);
     void (*paint_func)(Screen *, TxProfile *);
     void (*event_func)(Screen *, TxProfile *, Event*);
+    void (*destroy_func)(Screen *, TxProfile *);
+} Screen_vtable;
+
+struct Screen_struct {
+    Screen_vtable vtable;
     uint8_t is_dirty;
 };
 
 
-extern Screen ScreenTable[];
+extern Screen_vtable ScreenTable[];
 extern const uint8_t ScreenTableSize;
+
+void screen_change(uint8_t scr_id);
+
 
 #endif
