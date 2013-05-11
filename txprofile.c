@@ -1,4 +1,5 @@
 #include "txprofile.h"
+#include "lcd.h"
 
 
 TxProfile DefaultProfile = {
@@ -33,10 +34,11 @@ TxSettings DefaultSettings = {0};
 void init_profile_cache(TxProfileCache *adapter, uint8_t size)
 {
     uint8_t i;
-    for (i=0; i < PROFILE_MAX_COUNT; i++) {
-        update_profile_cache_from_eeprom(i, &adapter[size]);
+    for (i=0; i < size; i++) {
+        update_profile_cache_from_eeprom(i, &adapter[i]);
     }
 }
+
 
 
 uint8_t _read_profile_default(uint8_t *address, uint8_t profile_offset)
@@ -51,29 +53,38 @@ uint8_t _read_profile_default(uint8_t *address, uint8_t profile_offset)
     return d[profile_offset];
 }
 
+#include <avr/delay.h>
 void _prep_save_block(uint8_t *address, uint8_t profile_id)
 {
     eeprom_update_word((uint16_t*)address, PROFILE_SAVEBLOCK_HEADER);
 
-    address += 2;
 
     //default name
     char default_name[12] = "profile     ";
     default_name[7] = '1'+profile_id;
-    eeprom_update_block(&default_name, address, 12);
-
-    address += 12;
+    eeprom_update_block(&default_name, address+2, 12);
 
     //write out 255 to each spot to use default value
     uint8_t i;
-    for (i=0; i < PROFILE_SAVEBLOCK_SIZE; i++) {
+    for (i=2+12; i < PROFILE_SAVEBLOCK_SIZE; i++) {
         eeprom_update_byte(address+i, 0xFF);
     }
 
 }
 
+void force_clean_eeprom(uint8_t size)
+{
+    uint8_t i;
+    //overwrite/prep save blocks
+    for (i=0; i <size; i++) {
+        uint8_t *address = (uint8_t*)PROFILE_EEPROM_SAVEBLOCK_OFFSET + PROFILE_SAVEBLOCK_SIZE*i;
+        _prep_save_block(address, i);
+    } 
+}
+
 int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache)
 {
+
     uint8_t i=0;
     if (profile_id >= PROFILE_MAX_COUNT) {
         return 0;
@@ -83,13 +94,15 @@ int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache)
     // first two bytes should be our TxProfile Header block:
     uint16_t header = eeprom_read_word((uint16_t*)address);
     if ((header & PROFILE_SAVEBLOCK_HEADER_MASK) != PROFILE_SAVEBLOCK_HEADER) {
-        _prep_save_block(address, profile_id);
+        // _prep_save_block(address, profile_id);
+        return 0;
     }
 
     //skip header
     address += 2;
 
     //name
+    memset(cache->name, 0, 12);
     for (i=0; i < 12; i++) {
         cache->name[i] = _read_profile_default(address, offsetof(TxProfile, name)+i);
     }
@@ -115,6 +128,7 @@ int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache)
         if (mix_sw != MIXER_SWITCH_OFF)
             cache->profile_flags |= (1<<i);
     }
+
 
 
     return 1;

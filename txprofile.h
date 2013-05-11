@@ -61,11 +61,11 @@ extern TxSettings DefaultSettings;
 #define PROFILE_MAX_COUNT 6
 
 
-#define PROFILE_EEPROM_SAVEBLOCK_OFFSET 32;
-#define PROFILE_EEPROM_SETTINGS_OFFSET 0;
+#define PROFILE_EEPROM_SAVEBLOCK_OFFSET 32
+#define PROFILE_EEPROM_SETTINGS_OFFSET 0
 
 
-#define PROFILE_SAVEBLOCK_SIZE sizeof(TxProfile)+2  // 2 bytes for header
+#define PROFILE_SAVEBLOCK_SIZE (sizeof(TxProfile)+2)  // 2 bytes for header
 #define PROFILE_SAVEBLOCK_HEADER_MASK  0xFFF0
 #define PROFILE_SAVEBLOCK_FLAG_MASK    0x000F
 #define PROFILE_SAVEBLOCK_HEADER       0xADC0       //101011011100
@@ -89,5 +89,7 @@ int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache);
 void save_profile_to_eeprom(uint8_t profile_id, TxProfile *txp);
 int load_profile_from_eeprom(uint8_t profile_id, TxProfile *txp);
 
+void profile_change(uint8_t profile_id);
+void force_clean_eeprom(uint8_t size);
 
 #endif

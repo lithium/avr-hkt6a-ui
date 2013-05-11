@@ -23,7 +23,9 @@ void screen_profiles_destroy(Screen *scr, TxProfile *txp)
 }
 void screen_profiles_paint(Screen *scr, TxProfile *txp)
 {
-    lcd_printfxy(0,1, "#%d: %s", g_CurProfile+1, g_Profile.name);
+    TxProfileCache *cache = &g_ProfileAdapter[_cur_profile];
+
+    lcd_printfxy(0,1, "#%d: %s", _cur_profile+1, cache->name);
 }
 void screen_profiles_event(Screen *scr, TxProfile *txp, Event *e)
 {
@@ -34,12 +36,12 @@ void screen_profiles_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_CLICK) {
-        //TODO: change profile
+        profile_change(_cur_profile);
         screen_change(SCREEN_MAIN);
     }
     else
     if (e->type == EVENT_LONG_CLICK) {
-        //TODO: change profile
+        profile_change(_cur_profile);
         screen_change(SCREEN_NAME);
     }
     else

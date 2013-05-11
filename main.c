@@ -24,6 +24,12 @@ TxSettings g_Settings;
 
 
 
+void profile_change(uint8_t profile_id) 
+{
+    g_CurProfile = profile_id;
+    load_profile_from_eeprom(g_CurProfile, &g_Profile);
+}
+
 
 int main(void) 
 {
@@ -38,12 +44,15 @@ int main(void)
     lcd_init();
     event_init();
 
+    
+
+    // force_clean_eeprom(PROFILE_MAX_COUNT);
 
     load_settings_from_eeprom(&g_Settings);
-    g_CurProfile = g_Settings.cur_profile;
+    profile_change(g_Settings.cur_profile);
 
-    load_profile_from_eeprom(g_CurProfile, &g_Profile);
     init_profile_cache(g_ProfileAdapter, PROFILE_MAX_COUNT);
+
 
 
 

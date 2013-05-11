@@ -50,7 +50,7 @@ void screen_main_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_LONG_CLICK) {
-        screen_change(SCREEN_NAME);
+        screen_change(SCREEN_PROFILES);
     }
     else {
         return; //ignore any other event

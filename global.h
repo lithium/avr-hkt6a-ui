@@ -6,5 +6,6 @@
 extern Screen g_Screen;
 extern TxProfile g_Profile;
 extern uint8_t g_CurProfile;
+extern TxProfileCache g_ProfileAdapter[];
 
 #endif
