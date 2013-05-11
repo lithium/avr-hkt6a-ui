@@ -32,13 +32,14 @@ void screen_profiles_paint(Screen *scr, TxProfile *txp)
     for (i=0; i < 6; i++) {
         rev[i] = cache->reversed & (1<<i) ? 'R' : 'n';
     }
+
     // rev[7]=0; //null terminate string
-    lcd_printfxy(0,1, "%s %s %s %c%c%c", rev,
+    lcd_printfxy(0,1, "%s %s %s ", rev,
         cache->profile_flags & (1<<PROFILE_FLAG_DR) ? "DR" : "  ",
-        cache->profile_flags & (1<<PROFILE_FLAG_TC) ? "TC" : "  ",
-        cache->profile_flags & (1<<PROFILE_FLAG_MIX1) ? '1' : ' ',
-        cache->profile_flags & (1<<PROFILE_FLAG_MIX2) ? '2' : ' ',
-        cache->profile_flags & (1<<PROFILE_FLAG_MIX3) ? '3' : ' ');
+        cache->profile_flags & (1<<PROFILE_FLAG_TC) ? "TC" : "  ");
+    lcd_putc(cache->profile_flags & (1<<PROFILE_FLAG_MIX1) ? '1' : ' ');
+    lcd_putc(cache->profile_flags & (1<<PROFILE_FLAG_MIX2) ? '2' : ' ');
+    lcd_putc(cache->profile_flags & (1<<PROFILE_FLAG_MIX3) ? '3' : ' ');
 
 }
 void screen_profiles_event(Screen *scr, TxProfile *txp, Event *e)

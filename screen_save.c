@@ -13,10 +13,12 @@ uint8_t want_to_save=0;
 void screen_save_setup(Screen *scr, TxProfile *txp)
 {
     lcd_clear();
-    lcd_printfxy(0,0,"Save?");
+    lcd_printfxy(0,0,"SAVE?");
     lcd_printfxy(0,1,"#%d: %s", g_CurProfile+1, g_Profile.name);
 
     lcd_display(0b101); // cursor off but blinking
+
+    want_to_save = 0;
 
     input_init(_save_inputs, _save_inputs_size);
     input_assign(0, &want_to_save);
