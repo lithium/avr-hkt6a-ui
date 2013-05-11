@@ -44,7 +44,7 @@ int main(void)
     lcd_init();
     event_init();
 
-    
+
 
     // force_clean_eeprom(PROFILE_MAX_COUNT);
 

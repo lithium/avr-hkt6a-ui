@@ -70,6 +70,10 @@ void screen_mixes_event(Screen *scr, TxProfile *txp, Event *e)
         if (e->v.analog.number == 2) {
             int8_t v = (e->v.analog.position - 128)/64; // -7 .. +7
             input_value(v);
+
+            if (v) {
+                SET_PROFILE_DIRTY();
+            }
         }
     }
     else
@@ -84,7 +88,7 @@ void screen_mixes_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_DOUBLE_CLICK) {
-        screen_change(SCREEN_MAIN);
+        save_or_abort();
     }
 
     else {

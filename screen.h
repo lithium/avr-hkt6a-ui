@@ -6,7 +6,6 @@
 #include "txprofile.h"
 
 
-
 typedef struct Screen_struct Screen;
 
 typedef struct {
@@ -33,7 +32,11 @@ extern const uint8_t ScreenTableSize;
 #define SCREEN_SWITCHES 3
 #define SCREEN_MIXES 4
 #define SCREEN_PROFILES 5
+#define SCREEN_SAVE 6
+
+
 void screen_change(uint8_t scr_id);
+void save_or_abort();
 
 
 #endif

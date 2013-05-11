@@ -1,9 +1,9 @@
 #include "screen.h"
 #include "lcd.h"
 #include "input.h"
+#include "global.h"
 
 
-extern uint8_t g_CurProfile;
 
 static InputInfo _name_inputs[] = {
     //x,y, min,max
@@ -60,6 +60,9 @@ void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
         if (e->v.analog.number == 2) {
             int8_t v = (e->v.analog.position - 128)/64; // -7 .. +7
             input_value(v);
+            if (v) {
+                SET_PROFILE_DIRTY();
+            }
 
         }
     }
@@ -74,7 +77,7 @@ void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_DOUBLE_CLICK) {
-        screen_change(SCREEN_MAIN);
+        save_or_abort();
     }
     else {
         return; //ignore any other event

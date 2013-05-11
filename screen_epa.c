@@ -98,9 +98,13 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
                 int8_t v = (e->v.analog.position - 128)/16; // -7 .. +7
                 input_value(v);
 
-                txp->subtrim[_cur_channel] = v;
-
+                // txp->subtrim[_cur_channel] = v;
             }
+
+            if (v) {
+                SET_PROFILE_DIRTY();
+            }
+
         }
     }
     else
@@ -113,7 +117,7 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_DOUBLE_CLICK) {
-        screen_change(SCREEN_MAIN);
+        save_or_abort();
     }
     else {
         return; //ignore any other event
