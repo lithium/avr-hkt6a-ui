@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "lcd.h"
+#include "input.h"
 
 
 extern uint8_t g_CurProfile;

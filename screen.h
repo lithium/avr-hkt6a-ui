@@ -27,8 +27,9 @@ extern Screen_vtable ScreenTable[];
 extern const uint8_t ScreenTableSize;
 
 // this order must match screentable.c!!!
-#define SCREEN_EPA 0
-#define SCREEN_NAME 1
+#define SCREEN_NAME 0
+#define SCREEN_EPA 1
+#define SCREEN_SWITCHES 2
 void screen_change(uint8_t scr_id);
 
 
