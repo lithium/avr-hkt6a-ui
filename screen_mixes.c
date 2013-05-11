@@ -30,7 +30,7 @@ void _change_mix(TxProfile *txp, uint8_t new_mix)
 void screen_mixes_setup(Screen *scr, TxProfile *txp)
 {
     lcd_clear();
-    lcd_printfxy(0,0,"MIX     \x7e");
+    lcd_printfxy(0,0,"MIX");
     lcd_printfxy(0,1,"UP:      DN:");
 
     lcd_display(0b101); // cursor off but blinking
@@ -47,7 +47,7 @@ void screen_mixes_paint(Screen *scr, TxProfile *txp)
 {
     struct TxMixer *mix = &(txp->mixers[_cur_mix]);
 
-    lcd_printfxy(3,0, "%d %3s\x7e%3s  %s", 
+    lcd_printfxy(3,0, "%d %3s\x7e%3s %s", 
         _cur_mix+1,
         _srcdest_names[mix->src],
         _srcdest_names[mix->dest],
