@@ -5,6 +5,8 @@
 #include "event.h"
 #include "txprofile.h"
 
+
+
 typedef struct Screen_struct Screen;
 
 typedef struct {
@@ -20,9 +22,13 @@ struct Screen_struct {
 };
 
 
+
 extern Screen_vtable ScreenTable[];
 extern const uint8_t ScreenTableSize;
 
+// this order must match screentable.c!!!
+#define SCREEN_EPA 0
+#define SCREEN_NAME 1
 void screen_change(uint8_t scr_id);
 
 

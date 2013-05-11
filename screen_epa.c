@@ -132,6 +132,10 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
         }
         _input_assign = 0;
     }
+    else
+    if (e->type == EVENT_LONG_CLICK) {
+        screen_change(SCREEN_NAME);
+    }
     else {
         return; //ignore any other event
     }

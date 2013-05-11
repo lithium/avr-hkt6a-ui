@@ -17,6 +17,7 @@
 // int frame=0;
 Screen g_Screen;
 TxProfile g_Profile;
+uint8_t g_CurProfile=0;
 
 
 
@@ -50,7 +51,8 @@ int main(void)
 
 
     memset(&g_Profile, 0, sizeof(TxProfile));
-    screen_change(0);
+    memcpy(&g_Profile.name, "model a", 7);
+    screen_change(SCREEN_NAME);
 
     for (;;) {
         if (event_peek()) {
