@@ -84,6 +84,8 @@ typedef struct {
 } TxProfileCache;
 
 int load_settings_from_eeprom(TxSettings *txs);
+int save_settings_to_eeprom(TxSettings *txs);
+
 void init_profile_cache(TxProfileCache *adapter, uint8_t size);
 int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache);
 void save_profile_to_eeprom(uint8_t profile_id, TxProfile *txp);
@@ -91,5 +93,7 @@ int load_profile_from_eeprom(uint8_t profile_id, TxProfile *txp);
 
 void profile_change(uint8_t profile_id);
 void force_clean_eeprom(uint8_t size);
+
+int update_profile_cache(uint8_t profile_id, TxProfile *txp);
 
 #endif

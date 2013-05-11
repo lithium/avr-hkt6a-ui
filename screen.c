@@ -4,6 +4,9 @@
 
 void screen_change(uint8_t scr_id)
 {
+    if (g_Screen.vtable.destroy_func) {
+        g_Screen.vtable.destroy_func(&g_Screen, &g_Profile);
+    }
     memset(&g_Screen, 0, sizeof(Screen));
     memcpy(&(g_Screen.vtable), &ScreenTable[scr_id], sizeof(Screen_vtable));
     g_Screen.is_dirty = 1;

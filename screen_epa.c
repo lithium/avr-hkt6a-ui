@@ -58,18 +58,18 @@ void screen_epa_destroy(Screen *scr, TxProfile *txp)
 
 void screen_epa_paint(Screen *scr, TxProfile *txp)
 {
-    lcd_printfxy(2,0, "%d %c",
+    lcd_printfxy(2,0, "%d %c DR:",
         _cur_channel+1,
         txp->reversed & (1<<_cur_channel) ? 'R' : 'N');
 
     if (_cur_channel == 0 || _cur_channel == 1 || _cur_channel == 3) {
-        lcd_printfxy(6,0, "DR:%03d/%03d",
+        lcd_printfxy(9,0, "%03d/%03d",
             txp->dual_rate[2/(_cur_channel+1)].on,
             txp->dual_rate[2/(_cur_channel+1)].off);
     }
     else {
-        lcd_cursor(6,0);
-        lcd_write("         ");
+        lcd_cursor(9,0);
+        lcd_write("---/---");
     }
 
     lcd_printfxy(3,1, "%03d/%03d  %+04i", 
@@ -101,9 +101,7 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
                 // txp->subtrim[_cur_channel] = v;
             }
 
-            if (v) {
-                SET_PROFILE_DIRTY();
-            }
+            SET_PROFILE_DIRTY();
 
         }
     }

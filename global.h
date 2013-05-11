@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include "screen.h"
 
 // declared in main.c
 extern Screen g_Screen;

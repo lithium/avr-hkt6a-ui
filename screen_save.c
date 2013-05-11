@@ -34,6 +34,8 @@ void screen_save_paint(Screen *scr, TxProfile *txp)
 void _save_or_exit(uint8_t save)
 {
     if (save) {
+        // save profile
+        update_profile_cache(g_CurProfile, &g_Profile);
         save_profile_to_eeprom(g_CurProfile, &g_Profile);
     } 
     else {

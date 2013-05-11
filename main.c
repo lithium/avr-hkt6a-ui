@@ -28,6 +28,8 @@ void profile_change(uint8_t profile_id)
 {
     g_CurProfile = profile_id;
     load_profile_from_eeprom(g_CurProfile, &g_Profile);
+    g_Settings.cur_profile = profile_id;
+    save_settings_to_eeprom(&g_Settings);
 }
 
 
@@ -69,7 +71,7 @@ int main(void)
 
     LED_ON();
 
-
+    memset(&g_Screen, 0, sizeof(Screen));
     screen_change(SCREEN_MAIN);
 
     for (;;) {

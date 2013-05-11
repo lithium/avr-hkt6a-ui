@@ -1,5 +1,6 @@
 #include "txprofile.h"
 #include "lcd.h"
+#include "global.h"
 
 
 TxProfile DefaultProfile = {
@@ -80,6 +81,34 @@ void force_clean_eeprom(uint8_t size)
         uint8_t *address = (uint8_t*)PROFILE_EEPROM_SAVEBLOCK_OFFSET + PROFILE_SAVEBLOCK_SIZE*i;
         _prep_save_block(address, i);
     } 
+}
+
+int update_profile_cache(uint8_t profile_id, TxProfile *txp)
+{
+    if (profile_id >= PROFILE_MAX_COUNT) 
+        return 0;
+
+    TxProfileCache *cache = &g_ProfileAdapter[profile_id];
+
+    memcpy(cache->name, txp->name, 12);
+
+    cache->reversed = txp->reversed & 0b00111111;
+
+    cache->profile_flags = 0;
+    if (txp->switch_a == SWITCH_FUNC_DUAL_RATE || txp->switch_b == SWITCH_FUNC_DUAL_RATE) {
+        cache->profile_flags |= (1<<PROFILE_FLAG_DR);
+    }
+    if (txp->switch_a == SWITCH_FUNC_THROTTLE_CUT || txp->switch_b == SWITCH_FUNC_THROTTLE_CUT) {
+        cache->profile_flags |= (1<<PROFILE_FLAG_TC);
+    }
+
+    uint8_t i; 
+    for (i=0; i <3; i++) {
+        if (txp->mixers[i].sw != MIXER_SWITCH_OFF)
+            cache->profile_flags |= (1<<i);
+    }
+
+    return 1;
 }
 
 int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache)
@@ -204,4 +233,10 @@ int load_settings_from_eeprom(TxSettings *txs)
     return 1;
 }
 
+int save_settings_to_eeprom(TxSettings *txs)
+{
+    uint8_t *address = PROFILE_EEPROM_SETTINGS_OFFSET;
+    eeprom_update_word((uint16_t*)address, PROFILE_SAVEBLOCK_HEADER);
+    eeprom_update_block(txs, address+2, sizeof(TxSettings));
+}
 
