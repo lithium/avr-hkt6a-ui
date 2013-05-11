@@ -47,7 +47,7 @@ uint8_t input_current()
 
 void input_assign(uint8_t input_id, void *assign)
 {
-    if (!_input_info || input_id < 0 || input_id >= _input_info_size)
+    if (input_id < 0 || input_id >= _input_info_size)
         return;
     _input_info[input_id].assign = assign;
 }
@@ -55,7 +55,7 @@ void input_assign(uint8_t input_id, void *assign)
 
 InputInfo *_current_input()
 {
-    if (!_input_info || _input_current < 0 || _input_current >= _input_info_size)
+    if (_input_current < 0 || _input_current >= _input_info_size)
         return 0;
     return &_input_info[_input_current];
 }

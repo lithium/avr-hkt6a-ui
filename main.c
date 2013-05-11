@@ -50,7 +50,7 @@ int main(void)
     LED_ON();
 
 
-    memset(&g_Profile, 0, sizeof(TxProfile));
+    memcpy(&g_Profile, &DefaultProfile, sizeof(DefaultProfile));
     memcpy(&g_Profile.name, "model a", 7);
     screen_change(SCREEN_NAME);
 

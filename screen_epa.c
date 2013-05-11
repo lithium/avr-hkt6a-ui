@@ -28,8 +28,11 @@ void _change_channel(TxProfile *txp, uint8_t new_channel)
 {
     _cur_channel = new_channel;
 
-    input_assign(1, &(txp->dual_rate[_cur_channel].on));
-    input_assign(2, &(txp->dual_rate[_cur_channel].off));
+    if (_cur_channel == 0 || _cur_channel == 1 || _cur_channel == 3) {
+        input_assign(1, &(txp->dual_rate[2/(_cur_channel+1)].on));
+        input_assign(2, &(txp->dual_rate[2/(_cur_channel+1)].off));
+    }
+
     input_assign(3, &(txp->endpoints[_cur_channel].ep1));
     input_assign(4, &(txp->endpoints[_cur_channel].ep2));
     input_assign(5, &(txp->subtrim[_cur_channel]));
@@ -55,11 +58,19 @@ void screen_epa_destroy(Screen *scr, TxProfile *txp)
 
 void screen_epa_paint(Screen *scr, TxProfile *txp)
 {
-    lcd_printfxy(2,0, "%d %c DR:%03d/%03d", 
+    lcd_printfxy(2,0, "%d %c",
         _cur_channel+1,
-        txp->reversed & (1<<_cur_channel) ? 'R' : 'N',
-        txp->dual_rate[_cur_channel].on,
-        txp->dual_rate[_cur_channel].off);
+        txp->reversed & (1<<_cur_channel) ? 'R' : 'N');
+
+    if (_cur_channel == 0 || _cur_channel == 1 || _cur_channel == 3) {
+        lcd_printfxy(6,0, "DR:%03d/%03d",
+            txp->dual_rate[2/(_cur_channel+1)].on,
+            txp->dual_rate[2/(_cur_channel+1)].off);
+    }
+    else {
+        lcd_cursor(6,0);
+        lcd_write("         ");
+    }
 
     lcd_printfxy(3,1, "%03d/%03d  %+04i", 
         txp->endpoints[_cur_channel].ep1,

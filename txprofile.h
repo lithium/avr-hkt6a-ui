@@ -1,5 +1,6 @@
 #ifndef TX_PROFILE_H
 #define TX_PROFILE_H
+#include <avr/io.h>
 
 
 #define STICK_MODE1 0
@@ -26,7 +27,7 @@ typedef struct {
     struct {
         uint8_t on;
         uint8_t off;
-    } dual_rate[NUM_CHANNELS];
+    } dual_rate[3];
     struct {
         uint8_t ep1;
         uint8_t ep2;
@@ -44,6 +45,6 @@ typedef struct {
 } TxProfile;
 
 
-extern TxProfile g_CurrentProfile;
+extern TxProfile DefaultProfile;
 
 #endif
