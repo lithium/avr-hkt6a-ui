@@ -5,16 +5,16 @@
 
 extern Screen g_Screen;
 static uint8_t _input_current=0;
-static InputInfo *_input_info=0;
 static uint8_t _input_info_size=0;
 static uint8_t _timer_scaler=0;
 static uint16_t _input_value=0;
 
+#define INPUTS_MAX_SIZE 6
+static InputInfo _input_info[INPUTS_MAX_SIZE];
 
 void input_init(InputInfo *info, uint8_t info_size)
 {
-    _input_info = malloc(sizeof(InputInfo)*info_size);
-    memset(_input_info, 0, sizeof(InputInfo)*info_size);
+    memset(_input_info, 0, sizeof(_input_info));
     memcpy(_input_info, info, sizeof(InputInfo)*info_size);
     _input_info_size = info_size;
 
