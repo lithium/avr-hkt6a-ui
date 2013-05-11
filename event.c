@@ -18,7 +18,7 @@ Event InvalidEvent = {EVENT_INVALID, EVENT_INVALID};
 
 AnalogState *event_analog_state(uint8_t analog_number)
 {
-    if (analog_number < 1 || analog_number >= EVENT_ANALOG_MAX_COUNT)
+    if (analog_number < 1 || analog_number > EVENT_ANALOG_MAX_COUNT)
         return 0;
     return &_event_analogs[analog_number-1];
 }

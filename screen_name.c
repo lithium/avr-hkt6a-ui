@@ -71,7 +71,10 @@ void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
     else
     if (e->type == EVENT_LONG_CLICK) {
         screen_change(SCREEN_EPA);
-
+    }
+    else
+    if (e->type == EVENT_DOUBLE_CLICK) {
+        screen_change(SCREEN_MAIN);
     }
     else {
         return; //ignore any other event

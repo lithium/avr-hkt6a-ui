@@ -44,6 +44,7 @@ int main(void)
 
     event_register_analog(1,0);
     event_register_analog(2,1);
+    event_register_analog(3,2);
 
 
 
@@ -52,7 +53,7 @@ int main(void)
 
     memcpy(&g_Profile, &DefaultProfile, sizeof(DefaultProfile));
     memcpy(&g_Profile.name, "model a", 7);
-    screen_change(SCREEN_NAME);
+    screen_change(SCREEN_MAIN);
 
     for (;;) {
         if (event_peek()) {
