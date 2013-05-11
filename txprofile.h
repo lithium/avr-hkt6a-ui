@@ -21,7 +21,7 @@
 #define NUM_MIXERS 3
 typedef struct {
     char name[12];
-    uint8_t stick_mode : 4;
+    uint8_t stick_mode;
     uint8_t reversed : NUM_CHANNELS;
     struct {
         uint8_t on;
