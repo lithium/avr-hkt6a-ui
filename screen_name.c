@@ -6,11 +6,12 @@ extern uint8_t g_CurProfile;
 
 static InputInfo _name_inputs[] = {
     //x,y, min,max
-    {4,0,   -1,-1}, // we'll do input:0 ourselves
+    {4,0,   0b00100000,0b01111111}, // printable ascii
     {6,1,   0,3},
 };
 #define _name_inputs_size (sizeof(_name_inputs)/sizeof(InputInfo))
 
+static uint8_t _cursor=0;
 
 static const char *_mode_names[] = {"Mode1", "Mode2", "Mode3", "Mode4"};
 
@@ -35,27 +36,36 @@ void screen_name_paint(Screen *scr, TxProfile *txp)
 
     lcd_printfxy(6,1, _mode_names[txp->stick_mode & 3]);
 
-    input_cursor();
+    if (input_current() == 0) {
+        lcd_cursor(4+_cursor,0);
+    } else {
+        input_cursor();
+    }
+}
+
+void _change_cursor(TxProfile *txp, uint8_t c)
+{
+    _cursor = c;
+    input_assign(0, txp->name + _cursor);
 }
 void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
 {
     if (e->type == EVENT_ANALOG_DOWN || e->type == EVENT_ANALOG_UP) {
         if (e->v.analog.number == 1) {
+
+            _change_cursor(txp, MAP(e->v.analog.position, 0, 255, 0, 11));
         }
         else
         if (e->v.analog.number == 2) {
-            if (input_current() == 0) {
-                //
-            } else {
-                int8_t v = (e->v.analog.position - 128)/64; // -7 .. +7
-                input_value(v);
-            }
+            int8_t v = (e->v.analog.position - 128)/64; // -7 .. +7
+            input_value(v);
 
         }
     }
     else
     if (e->type == EVENT_CLICK) {
         input_next();
+        _cursor = 0;
     }
     else
     if (e->type == EVENT_LONG_CLICK) {
