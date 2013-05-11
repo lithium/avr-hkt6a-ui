@@ -48,7 +48,7 @@ void screen_switches_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_LONG_CLICK) {
-        screen_change(SCREEN_EPA);
+        screen_change(SCREEN_MIXES);
 
     }
     else {

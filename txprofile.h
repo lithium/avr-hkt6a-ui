@@ -22,7 +22,7 @@
 typedef struct {
     char name[12];
     uint8_t stick_mode;
-    uint8_t reversed : NUM_CHANNELS;
+    uint8_t reversed;
     struct {
         uint8_t on;
         uint8_t off;
@@ -35,11 +35,11 @@ typedef struct {
     uint8_t switch_a;
     uint8_t switch_b;
     struct {
-        uint8_t src : 4;
-        uint8_t dest : 4;
-        uint8_t up_rate;
-        uint8_t down_rate;
-        uint8_t sw : 2;
+        uint8_t src;
+        uint8_t dest;
+        int8_t up_rate;
+        int8_t down_rate;
+        uint8_t sw;
     } mixers[NUM_MIXERS];
 } TxProfile;
 
