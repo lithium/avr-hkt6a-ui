@@ -19,17 +19,18 @@ void _change_mix(TxProfile *txp, uint8_t new_mix)
 {
     _cur_mix = new_mix;
 
-    input_assign(0, &(txp->mixers[_cur_mix].src));
-    input_assign(1, &(txp->mixers[_cur_mix].dest));
-    input_assign(2, &(txp->mixers[_cur_mix].sw));
-    input_assign(3, &(txp->mixers[_cur_mix].up_rate));
-    input_assign(4, &(txp->mixers[_cur_mix].down_rate));
+    struct TxMixer *mix = &txp->mixers[_cur_mix];
+    input_assign(0, &(mix->src));
+    input_assign(1, &(mix->dest));
+    input_assign(2, &(mix->sw));
+    input_assign(3, &(mix->up_rate));
+    input_assign(4, &(mix->down_rate));
 }
 
 void screen_mixes_setup(Screen *scr, TxProfile *txp)
 {
     lcd_clear();
-    lcd_printfxy(0,0,"MIX     >");
+    lcd_printfxy(0,0,"MIX     \x7e");
     lcd_printfxy(0,1,"UP:      DN:");
 
     lcd_display(0b101); // cursor off but blinking
@@ -44,13 +45,15 @@ void screen_mixes_destroy(Screen *scr, TxProfile *txp)
 }
 void screen_mixes_paint(Screen *scr, TxProfile *txp)
 {
-    lcd_printfxy(3,0, "%d", _cur_mix+1);
+    struct TxMixer *mix = &(txp->mixers[_cur_mix]);
 
-    lcd_printfxy(5,0, _srcdest_names[txp->mixers[_cur_mix].src]);
-    lcd_printfxy(9,0, _srcdest_names[txp->mixers[_cur_mix].dest]);
-    lcd_printfxy(13,0, _mixer_switch_names[txp->mixers[_cur_mix].sw]);
-    lcd_printfxy(3,1, "%+04i", txp->mixers[_cur_mix].up_rate);
-    lcd_printfxy(12,1, "%+04i", txp->mixers[_cur_mix].down_rate);
+    lcd_printfxy(3,0, "%d %3s\x7e%3s  %s", 
+        _cur_mix+1,
+        _srcdest_names[mix->src],
+        _srcdest_names[mix->dest],
+        _mixer_switch_names[mix->sw]);
+
+    lcd_printfxy(3,1, "%+04i  DN:%+04i", mix->up_rate, mix->down_rate);
 
     input_cursor();
 }

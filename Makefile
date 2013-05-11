@@ -2,6 +2,7 @@
 TARGET_ARCH	= -mmcu=atmega328p
 # INCLUDES	= -Ilib
 #DEBUG_FLAGS	= -DDEBUG_LEVEL=1
+# DEBUG_FLAGS = -Wa,-adhlns=${TARGET}.lst -gstabs
 F_CPU		= 16000000
 
 

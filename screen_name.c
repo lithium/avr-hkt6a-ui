@@ -7,7 +7,7 @@ extern uint8_t g_CurProfile;
 
 static InputInfo _name_inputs[] = {
     //x,y, min,max
-    {4,0,   0b00100000,0b01111111}, // printable ascii
+    {4,0,   ' ','}'}, // printable ascii
     {6,1,   0,3},
 };
 #define _name_inputs_size (sizeof(_name_inputs)/sizeof(InputInfo))

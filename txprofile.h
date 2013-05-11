@@ -34,7 +34,7 @@ typedef struct {
     int8_t subtrim[NUM_CHANNELS];
     uint8_t switch_a;
     uint8_t switch_b;
-    struct {
+    struct TxMixer {
         uint8_t src;
         uint8_t dest;
         int8_t up_rate;

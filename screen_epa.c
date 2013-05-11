@@ -37,7 +37,8 @@ void _change_channel(TxProfile *txp, uint8_t new_channel)
 
 void screen_epa_setup(Screen *scr, TxProfile *txp)
 {
-    lcd_printfxy(0,0,"CH    DR:");
+    lcd_clear();
+    lcd_printfxy(0,0,"CH");
     lcd_printfxy(0,1,"EP:");
 
     lcd_display(0b101); // cursor off but blinking
@@ -54,19 +55,16 @@ void screen_epa_destroy(Screen *scr, TxProfile *txp)
 
 void screen_epa_paint(Screen *scr, TxProfile *txp)
 {
-    lcd_printfxy(2,0, "%d", _cur_channel+1);
-
-    lcd_printfxy(4,0, "%c", txp->reversed & (1<<_cur_channel) ? 'R' : 'N');
-
-    lcd_printfxy(9,0, "%03d/%03d", 
+    lcd_printfxy(2,0, "%d %c DR:%03d/%03d", 
+        _cur_channel+1,
+        txp->reversed & (1<<_cur_channel) ? 'R' : 'N',
         txp->dual_rate[_cur_channel].on,
         txp->dual_rate[_cur_channel].off);
 
-    lcd_printfxy(3,1, "%03d/%03d", 
+    lcd_printfxy(3,1, "%03d/%03d  %+04i", 
         txp->endpoints[_cur_channel].ep1,
-        txp->endpoints[_cur_channel].ep2);
-
-    lcd_printfxy(12,1, "%+04i", txp->subtrim[_cur_channel]);
+        txp->endpoints[_cur_channel].ep2,
+        txp->subtrim[_cur_channel]);
 
     input_cursor();
 }
