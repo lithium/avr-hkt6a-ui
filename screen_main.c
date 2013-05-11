@@ -3,7 +3,7 @@
 #include "global.h"
 #include "utils.h"
 
-uint8_t _batt_voltage=0;
+uint8_t _batt_voltage;
 
 #define MAX_VOLTAGE 50   //5.0v
 #define LOW_VOLTAGE 36   
@@ -12,8 +12,8 @@ uint8_t _batt_voltage=0;
 
 inline uint8_t _convert_voltage(uint8_t a)
 {
-    uint8_t v = MAP((uint8_t)a, 0,255, 0,50);
-    return 50-v;
+    uint8_t v = MAP((uint8_t)a, 0,255, 0,MAX_VOLTAGE);
+    return MAX_VOLTAGE-v;
 }
 
 void screen_main_setup(Screen *scr, TxProfile *txp)

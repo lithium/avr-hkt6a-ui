@@ -111,6 +111,10 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
     if (e->type == EVENT_LONG_CLICK) {
         screen_change(SCREEN_SWITCHES);
     }
+    else
+    if (e->type == EVENT_DOUBLE_CLICK) {
+        screen_change(SCREEN_MAIN);
+    }
     else {
         return; //ignore any other event
     }

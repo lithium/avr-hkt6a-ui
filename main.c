@@ -12,13 +12,15 @@
 #include "millis.h"
 #include "event.h"
 #include "screen.h"
+#include "txprofile.h"
 
 
 // int frame=0;
 Screen g_Screen;
 TxProfile g_Profile;
 uint8_t g_CurProfile=0;
-
+TxProfileCache g_ProfileAdapter[PROFILE_MAX_COUNT];
+TxSettings g_Settings;
 
 
 
@@ -37,6 +39,14 @@ int main(void)
     event_init();
 
 
+    load_settings_from_eeprom(&g_Settings);
+    g_CurProfile = g_Settings.cur_profile;
+
+    load_profile_from_eeprom(g_CurProfile, &g_Profile);
+    init_profile_cache(g_ProfileAdapter, PROFILE_MAX_COUNT);
+
+
+
     //pushbutton on PB4
     DDRB &= ~_BV(4); //input pin
     PORTB &= ~_BV(4); // turn off pull up
@@ -51,8 +61,6 @@ int main(void)
     LED_ON();
 
 
-    memcpy(&g_Profile, &DefaultProfile, sizeof(DefaultProfile));
-    memcpy(&g_Profile.name, "model a", 7);
     screen_change(SCREEN_MAIN);
 
     for (;;) {

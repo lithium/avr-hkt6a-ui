@@ -82,6 +82,11 @@ void screen_mixes_event(Screen *scr, TxProfile *txp, Event *e)
         screen_change(SCREEN_NAME);
 
     }
+    else
+    if (e->type == EVENT_DOUBLE_CLICK) {
+        screen_change(SCREEN_MAIN);
+    }
+
     else {
         return; //ignore any other event
     }

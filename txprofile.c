@@ -27,3 +27,167 @@ TxProfile DefaultProfile = {
         {(uint8_t)0,(uint8_t)0,(int8_t)100,(int8_t)100,(uint8_t)3},
     }, // 3mixers off by default
 };
+
+TxSettings DefaultSettings = {0};
+
+void init_profile_cache(TxProfileCache *adapter, uint8_t size)
+{
+    uint8_t i;
+    for (i=0; i < PROFILE_MAX_COUNT; i++) {
+        update_profile_cache_from_eeprom(i, &adapter[size]);
+    }
+}
+
+
+uint8_t _read_profile_default(uint8_t *address, uint8_t profile_offset)
+{
+    uint8_t data = eeprom_read_byte(address + profile_offset);
+
+    if (data != 0xFF) {
+        return data;
+    }
+
+    uint8_t *d = (uint8_t*)&DefaultProfile;
+    return d[profile_offset];
+}
+
+void _prep_save_block(uint8_t *address, uint8_t profile_id)
+{
+    eeprom_update_word((uint16_t*)address, PROFILE_SAVEBLOCK_HEADER);
+
+    address += 2;
+
+    //default name
+    char default_name[12] = "profile     ";
+    default_name[7] = '1'+profile_id;
+    eeprom_update_block(&default_name, address, 12);
+
+    address += 12;
+
+    //write out 255 to each spot to use default value
+    uint8_t i;
+    for (i=0; i < PROFILE_SAVEBLOCK_SIZE; i++) {
+        eeprom_update_byte(address+i, 0xFF);
+    }
+
+}
+
+int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache)
+{
+    uint8_t i=0;
+    if (profile_id >= PROFILE_MAX_COUNT) {
+        return 0;
+    }
+    uint8_t *address = (uint8_t*)PROFILE_EEPROM_SAVEBLOCK_OFFSET + PROFILE_SAVEBLOCK_SIZE*profile_id;
+
+    // first two bytes should be our TxProfile Header block:
+    uint16_t header = eeprom_read_word((uint16_t*)address);
+    if ((header & PROFILE_SAVEBLOCK_HEADER_MASK) != PROFILE_SAVEBLOCK_HEADER) {
+        _prep_save_block(address, profile_id);
+    }
+
+    //skip header
+    address += 2;
+
+    //name
+    for (i=0; i < 12; i++) {
+        cache->name[i] = _read_profile_default(address, offsetof(TxProfile, name)+i);
+    }
+
+    //reversed
+    cache->reversed = _read_profile_default(address, offsetof(TxProfile, reversed));
+
+    //determine dr/tc flags
+    uint8_t switch_a = _read_profile_default(address, offsetof(TxProfile, switch_a));
+    uint8_t switch_b = _read_profile_default(address, offsetof(TxProfile, switch_b));
+    cache->profile_flags = 0;
+    if (switch_a == SWITCH_FUNC_DUAL_RATE || switch_b == SWITCH_FUNC_DUAL_RATE) {
+        cache->profile_flags |= (1<<PROFILE_FLAG_DR);
+    }
+    if (switch_a == SWITCH_FUNC_THROTTLE_CUT || switch_b == SWITCH_FUNC_THROTTLE_CUT) {
+        cache->profile_flags |= (1<<PROFILE_FLAG_TC);
+    }
+
+    //determine which mixers are in use
+    uint8_t sw_ofs = offsetof(TxProfile, mixers) + offsetof(struct TxMixer, sw);
+    for (i=0; i <3; i++) {
+        uint8_t mix_sw = _read_profile_default(address, sw_ofs + sizeof(struct TxMixer)*i);
+        if (mix_sw != MIXER_SWITCH_OFF)
+            cache->profile_flags |= (1<<i);
+    }
+
+
+    return 1;
+}
+
+void save_profile_to_eeprom(uint8_t profile_id, TxProfile *txp)
+{
+    uint8_t i=0;
+    if (profile_id >= PROFILE_MAX_COUNT) {
+        return;
+    }
+    uint8_t *address = (uint8_t*)PROFILE_EEPROM_SAVEBLOCK_OFFSET + PROFILE_SAVEBLOCK_SIZE*profile_id;
+
+
+
+    // first two bytes should be our TxProfile Header block:
+    uint16_t header = eeprom_read_word((uint16_t*)address);
+    if ((header & PROFILE_SAVEBLOCK_HEADER_MASK) != PROFILE_SAVEBLOCK_HEADER) {
+        _prep_save_block(address, profile_id);
+    }
+
+    uint8_t *p = (uint8_t*)txp;
+    uint8_t *d = (uint8_t*)&DefaultProfile;
+    for (i=2; i < PROFILE_SAVEBLOCK_SIZE; i++, p++, d++) {
+        //only update bytes that differ from the default
+        if (*p != *d) {
+            eeprom_update_byte(address+i,*p);
+        }
+    }
+}
+
+int load_profile_from_eeprom(uint8_t profile_id, TxProfile *txp)
+{
+    if (profile_id >= PROFILE_MAX_COUNT)
+        return 0;
+    uint8_t *address = (uint8_t*)PROFILE_EEPROM_SAVEBLOCK_OFFSET + PROFILE_SAVEBLOCK_SIZE*profile_id;
+
+    // first two bytes should be our TxProfile Header block:
+    uint16_t header = eeprom_read_word((uint16_t*)address);
+    if ((header & PROFILE_SAVEBLOCK_HEADER_MASK) != PROFILE_SAVEBLOCK_HEADER) {
+        return 0;
+    }
+
+    memcpy(txp, &DefaultProfile, sizeof(TxProfile));
+
+    uint8_t i=0;
+    uint8_t *p = (uint8_t*)txp;
+    for (i=2; i < PROFILE_SAVEBLOCK_SIZE; i++, p++) {
+        uint8_t data = eeprom_read_byte(address+i);
+        if (data != 0xFF) {
+            *p = data;
+        }
+    }
+ 
+
+    return 1;
+}
+
+int load_settings_from_eeprom(TxSettings *txs)
+{
+    uint8_t *address = PROFILE_EEPROM_SETTINGS_OFFSET;
+
+    uint16_t header = eeprom_read_word((uint16_t*)address);
+    if ((header & PROFILE_SAVEBLOCK_HEADER_MASK) != PROFILE_SAVEBLOCK_HEADER) {
+        // no settings written before
+        eeprom_update_word((uint16_t*)address, PROFILE_SAVEBLOCK_HEADER);
+        eeprom_update_block(&DefaultSettings, address+2, sizeof(TxSettings));
+        *txs = DefaultSettings;
+        return 1;
+    }
+
+    eeprom_read_block(txs, address+2, sizeof(TxSettings));
+    return 1;
+}
+
+

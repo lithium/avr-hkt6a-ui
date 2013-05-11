@@ -1,6 +1,8 @@
 #ifndef TX_PROFILE_H
 #define TX_PROFILE_H
 #include <avr/io.h>
+#include <avr/eeprom.h>
+#include <string.h>
 
 
 #define STICK_MODE1 0
@@ -44,7 +46,48 @@ typedef struct {
     } mixers[NUM_MIXERS];
 } TxProfile;
 
+typedef struct {
+    uint8_t cur_profile;
+} TxSettings;
+
 
 extern TxProfile DefaultProfile;
+extern TxSettings DefaultSettings;
+
+
+
+
+
+#define PROFILE_MAX_COUNT 6
+
+
+#define PROFILE_EEPROM_SAVEBLOCK_OFFSET 32;
+#define PROFILE_EEPROM_SETTINGS_OFFSET 0;
+
+
+#define PROFILE_SAVEBLOCK_SIZE sizeof(TxProfile)+2  // 2 bytes for header
+#define PROFILE_SAVEBLOCK_HEADER_MASK  0xFFF0
+#define PROFILE_SAVEBLOCK_FLAG_MASK    0x000F
+#define PROFILE_SAVEBLOCK_HEADER       0xADC0       //101011011100
+
+
+//profile flags
+#define PROFILE_FLAG_MIX1 0
+#define PROFILE_FLAG_MIX2 1
+#define PROFILE_FLAG_MIX3 2
+#define PROFILE_FLAG_DR 3
+#define PROFILE_FLAG_TC 4
+typedef struct {
+    char name[12];
+    uint8_t reversed;
+    uint8_t profile_flags;
+} TxProfileCache;
+
+int load_settings_from_eeprom(TxSettings *txs);
+void init_profile_cache(TxProfileCache *adapter, uint8_t size);
+int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache);
+void save_profile_to_eeprom(uint8_t profile_id, TxProfile *txp);
+int load_profile_from_eeprom(uint8_t profile_id, TxProfile *txp);
+
 
 #endif

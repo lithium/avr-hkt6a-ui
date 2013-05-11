@@ -32,6 +32,7 @@ extern const uint8_t ScreenTableSize;
 #define SCREEN_EPA 2
 #define SCREEN_SWITCHES 3
 #define SCREEN_MIXES 4
+#define SCREEN_PROFILES 5
 void screen_change(uint8_t scr_id);
 
 
