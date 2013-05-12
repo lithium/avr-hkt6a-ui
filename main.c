@@ -90,12 +90,6 @@ int main(void)
             g_Screen.vtable.paint_func(&g_Screen, &g_Profile);
             g_Screen.is_dirty = 0;
         }
-        uint8_t s = serial_readchar();
-        if (s == 85) {
-            _batt_voltage = serial_readchar();
-            g_Screen.is_dirty = 1;
-        }
-
 
         sleep_enable();
         sleep_cpu();

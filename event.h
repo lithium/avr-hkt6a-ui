@@ -32,8 +32,14 @@ typedef enum {
     EVENT_ANALOG_DOWN,
     // EVENT_ANALOG_MIN,
     // EVENT_ANALOG_MAX,
+    EVENT_CHANNEL_DATA,
     EVENT_NUM
 } EventType;
+
+
+typedef struct {
+    int16_t values[6];
+} ChannelDataEvent;
 
 
 typedef struct {
@@ -68,6 +74,7 @@ typedef struct {
     union {
         ButtonEvent button;
         AnalogEvent analog;
+        ChannelDataEvent channel;
     } v;
 } Event;
 
@@ -78,7 +85,7 @@ extern Event InvalidEvent;
 
 void event_init();
 
-uint8_t event_publish(Event e);
+Event create_event(EventType type);
 
 uint8_t event_push(Event e);
 Event *event_peek();

@@ -4,7 +4,7 @@
 #include "utils.h"
 
 uint8_t _batt_voltage;
-uint8_t _counter=0;
+uint16_t _counter=0;
 
 #define MAX_VOLTAGE 50   //5.0v
 #define LOW_VOLTAGE 36   
@@ -49,6 +49,10 @@ void screen_main_event(Screen *scr, TxProfile *txp, Event *e)
         // if (e->v.analog.number == 3) {
         //     _batt_voltage = _convert_voltage(e->v.analog.position);
         // }
+    }
+    else
+    if (e->type == EVENT_DOUBLE_CLICK) {
+        screen_change(SCREEN_CHANNELS);
     }
     else
     if (e->type == EVENT_LONG_CLICK) {

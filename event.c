@@ -42,7 +42,7 @@ void event_init()
 }
 
 
-Event _create_event(EventType type)
+Event create_event(EventType type)
 {
     Event e;
     e.id = ++_event_id_counter;
@@ -182,7 +182,7 @@ ISR(TIMER1_COMPA_vect)
         bs->val = v;
 
 
-        Event e = _create_event(EVENT_INVALID);
+        Event e = create_event(EVENT_INVALID);
         e.v.button.number = i;
 
 
@@ -240,7 +240,7 @@ ISR(ADC_vect)
     if (as->number) {
 
         if (v != as->val) {
-            Event e = _create_event(EVENT_INVALID);
+            Event e = create_event(EVENT_INVALID);
             e.v.analog.number = as->number;
             e.v.analog.position = as->reversed ? 255-v : v;
 
