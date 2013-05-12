@@ -27,8 +27,8 @@ typedef enum {
     EVENT_LONG_CLICK,
     EVENT_ANALOG_UP,
     EVENT_ANALOG_DOWN,
-    EVENT_ANALOG_MIN,
-    EVENT_ANALOG_MAX,
+    // EVENT_ANALOG_MIN,
+    // EVENT_ANALOG_MAX,
     EVENT_NUM
 } EventType;
 
@@ -41,6 +41,7 @@ typedef struct {
     uint8_t number;
     uint8_t channel;
     uint8_t val;
+    uint8_t reversed;
 } AnalogState;
 
 
@@ -84,7 +85,7 @@ Event event_next();
 
 
 uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uint8_t mask, uint8_t active_high);
-uint8_t event_register_analog(uint8_t analog_number, uint8_t channel);
+uint8_t event_register_analog(uint8_t analog_number, uint8_t channel, uint8_t reversed);
 
 
 AnalogState *event_analog_state(uint8_t analog_number);

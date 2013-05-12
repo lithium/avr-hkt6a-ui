@@ -136,7 +136,7 @@ uint8_t event_register_button(uint8_t button_no, volatile uint8_t *port, uint8_t
 }
 
 
-uint8_t event_register_analog(uint8_t analog_no, uint8_t channel)
+uint8_t event_register_analog(uint8_t analog_no, uint8_t channel, uint8_t reversed)
 {
     analog_no--;
     if (analog_no >= EVENT_ANALOG_MAX_COUNT) {
@@ -145,6 +145,7 @@ uint8_t event_register_analog(uint8_t analog_no, uint8_t channel)
 
     _event_analogs[analog_no].number = analog_no+1;
     _event_analogs[analog_no].channel = channel;
+    _event_analogs[analog_no].reversed = reversed;
 
     // this is the first one, so set up channel to start sampling
     if (_event_analog_cur < 0) {
@@ -241,9 +242,10 @@ ISR(ADC_vect)
         if (v != as->val) {
             Event e = _create_event(EVENT_INVALID);
             e.v.analog.number = as->number;
-            e.v.analog.position = v;
+            e.v.analog.position = as->reversed ? 255-v : v;
 
-            if (v == 255) {
+/*
+            if (as->reversed ? v == 255) {
                 e.type = EVENT_ANALOG_MAX;
                 event_push(e);
             }
@@ -253,6 +255,7 @@ ISR(ADC_vect)
                 event_push(e);
             }
             else
+            */
             if (v > as->val) {
                 e.type = EVENT_ANALOG_UP;
                 event_push(e);

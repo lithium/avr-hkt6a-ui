@@ -63,9 +63,9 @@ int main(void)
     PORTB |= _BV(4); // turn on pull up
     event_register_button(1,&PINB,_BV(PB4),0);
 
-    event_register_analog(1,0);
-    event_register_analog(2,1);
-    event_register_analog(3,2);
+    event_register_analog(1,0,0);
+    event_register_analog(2,1,1);
+    event_register_analog(3,2,0);
 
 
 
