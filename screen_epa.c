@@ -84,7 +84,7 @@ void screen_epa_event(Screen *scr, TxProfile *txp, Event *e)
 {
     if (e->type == EVENT_ANALOG_DOWN || e->type == EVENT_ANALOG_UP) {
         if (e->v.analog.number == 1) {
-            _change_channel(txp, MAP(e->v.analog.position, 0, 255, 0, 6));
+            _change_channel(txp, MAP(e->v.analog.position, EVENT_ANALOG_MAP_THR_MIN, EVENT_ANALOG_MAP_THR_MAX, 0, 5));
         }
         else if (e->v.analog.number == 2) {
             if (input_current() == 0) {
