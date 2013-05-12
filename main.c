@@ -13,7 +13,7 @@
 #include "event.h"
 #include "screen.h"
 #include "txprofile.h"
-
+#include "serial.h"
 
 // int frame=0;
 Screen g_Screen;
@@ -33,8 +33,13 @@ void profile_change(uint8_t profile_id)
 }
 
 
+extern uint8_t _batt_voltage;
+
 int main(void) 
 {
+    serial_init(); // must occur with interrupts off
+
+
     sei();
 
     //indicator led
@@ -45,7 +50,6 @@ int main(void)
     millis_init();
     lcd_init();
     event_init();
-
 
 
     // force_clean_eeprom(PROFILE_MAX_COUNT);
@@ -75,6 +79,7 @@ int main(void)
     screen_change(SCREEN_MAIN);
 
     for (;;) {
+
         if (event_peek()) {
             Event e = event_pop();
             g_Screen.vtable.event_func(&g_Screen, &g_Profile, &e);
@@ -85,6 +90,12 @@ int main(void)
             g_Screen.vtable.paint_func(&g_Screen, &g_Profile);
             g_Screen.is_dirty = 0;
         }
+        uint8_t s = serial_readchar();
+        if (s == 85) {
+            _batt_voltage = serial_readchar();
+            g_Screen.is_dirty = 1;
+        }
+
 
         sleep_enable();
         sleep_cpu();
