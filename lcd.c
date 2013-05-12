@@ -44,6 +44,16 @@ static void lcd_write4(uint8_t data)
 }
 
 
+void lcd_send_cg(uint8_t char_num, uint8_t glyph[])
+{
+    uint8_t cgaddr = 0b01000000 | (char_num*8 & 0b00111111);
+    uint8_t i;
+    for (i=0; i < 8; i++) {
+        lcd_cmd(cgaddr+i);
+        lcd_putc(glyph[i]);
+    }
+}
+
 void lcd_send(uint8_t value, uint8_t is_data)
 {
     if (is_data)

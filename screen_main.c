@@ -2,6 +2,7 @@
 #include "lcd.h"
 #include "global.h"
 #include "utils.h"
+#include "progress.h"
 
 uint8_t _batt_voltage;
 uint16_t _counter=0;
@@ -32,6 +33,7 @@ void screen_main_destroy(Screen *scr, TxProfile *txp)
 }
 void screen_main_paint(Screen *scr, TxProfile *txp)
 {
+    progress_draw(0,0, 5, _batt_voltage);
 
     // if (_batt_voltage <= LOW_VOLTAGE) {
     //     lcd_printfxy(10,0, "!batt!");
@@ -40,12 +42,14 @@ void screen_main_paint(Screen *scr, TxProfile *txp)
     //     lcd_printfxy(11,0, "v%1d.%1d", _batt_voltage / 10, _batt_voltage % 10);
     // }
     lcd_printfxy(0,1, "#%d: %s", g_CurProfile+1, g_Profile.name);
-    lcd_printfxy(0,0, "serial-%02d %d", _batt_voltage, _counter);
 
 }
 void screen_main_event(Screen *scr, TxProfile *txp, Event *e)
 {
     if (e->type == EVENT_ANALOG_DOWN || e->type == EVENT_ANALOG_UP) {
+        if (e->v.analog.number == 1) {
+            _batt_voltage = e->v.analog.position;
+        }
         // if (e->v.analog.number == 3) {
         //     _batt_voltage = _convert_voltage(e->v.analog.position);
         // }

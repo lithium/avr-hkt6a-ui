@@ -25,6 +25,7 @@ void lcd_display(uint8_t cb_bits);
 void lcd_clear();
 void lcd_home();
 void lcd_cursor(uint8_t col, uint8_t row);
+void lcd_send_cg(uint8_t char_num, uint8_t glyph[]);
 
 
 #endif //LCD_H

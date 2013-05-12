@@ -49,6 +49,7 @@ int main(void)
 
     millis_init();
     lcd_init();
+    progress_init();
     event_init();
 
 
