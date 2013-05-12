@@ -117,7 +117,7 @@ Event event_next()
  * buttons are 1-indexed.
  * 
  */
-uint8_t event_register_button(uint8_t button_no, volatile uint8_t *port, uint8_t mask)
+uint8_t event_register_button(uint8_t button_no, volatile uint8_t *port, uint8_t mask, uint8_t active_high)
 {
     button_no--;
     if (button_no >= EVENT_BUTTON_MAX_COUNT) {
@@ -126,9 +126,10 @@ uint8_t event_register_button(uint8_t button_no, volatile uint8_t *port, uint8_t
 
     _event_buttons[button_no].port = port;
     _event_buttons[button_no].mask = mask;
-    _event_buttons[button_no].val = 0;
-    _event_buttons[button_no].last_val = 0;
+    _event_buttons[button_no].val = active_high ? 0: 255;
+    _event_buttons[button_no].last_val = active_high ? 0 : 255;
     _event_buttons[button_no].last_millis = 0;
+    _event_buttons[button_no].active_high = active_high;
 
 
     return button_no+1;
@@ -161,6 +162,8 @@ uint8_t event_register_analog(uint8_t analog_no, uint8_t channel)
 // extern uint8_t g_button;
 // extern uint8_t g_dirty;
 
+extern uint8_t _batt_voltage;
+#include "global.h"
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -177,11 +180,14 @@ ISR(TIMER1_COMPA_vect)
         uint8_t v = *(bs->port) & (bs->mask);
         bs->val = v;
 
+
         Event e = _create_event(EVENT_INVALID);
         e.v.button.number = i;
 
+
+
         if (v != bs->last_val) {
-            if (v) {
+            if (bs->active_high ? (255-v > EVENT_BUTTON_MINMAX_THRESHOLD) : (v <= EVENT_BUTTON_MINMAX_THRESHOLD)) {
                 // e.type = EVENT_BUTTON_DOWN;
                 if (bs->last_millis && (e.millis - bs->last_millis) < EVENT_TIMING_DOUBLE_CLICK) {
                     e.type = EVENT_DOUBLE_CLICK;
@@ -200,7 +206,7 @@ ISR(TIMER1_COMPA_vect)
         }
 
         if (bs->last_millis) {
-            if (v) {
+            if (bs->active_high ? (255-v > EVENT_BUTTON_MINMAX_THRESHOLD) : (v <= EVENT_BUTTON_MINMAX_THRESHOLD)) {
                 if (e.millis - bs->last_millis > EVENT_TIMING_LONG_CLICK) {
                     e.type = EVENT_LONG_CLICK;
                     event_push(e);

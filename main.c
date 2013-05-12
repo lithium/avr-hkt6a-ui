@@ -58,10 +58,10 @@ int main(void)
 
 
 
-    //pushbutton on PB4
+    //pushbutton on PB4 - active low
     DDRB &= ~_BV(4); //input pin
-    PORTB &= ~_BV(4); // turn off pull up
-    event_register_button(1,&PINB,_BV(PB4));
+    PORTB |= _BV(4); // turn on pull up
+    event_register_button(1,&PINB,_BV(PB4),0);
 
     event_register_analog(1,0);
     event_register_analog(2,1);

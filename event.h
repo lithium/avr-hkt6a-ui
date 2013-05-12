@@ -17,6 +17,8 @@
 #define EVENT_TIMING_DOUBLE_CLICK 300
 #define EVENT_TIMING_LONG_CLICK 1500
 #define EVENT_ANALOG_MINMAX_THRESHOLD 1
+#define EVENT_BUTTON_MINMAX_THRESHOLD 6
+
 
 typedef enum {
     EVENT_INVALID=0,
@@ -48,6 +50,7 @@ typedef struct {
 typedef struct {
     volatile uint8_t *port;
     volatile uint8_t mask;
+    uint8_t active_high;
     uint8_t val;
     uint8_t last_val;
     uint16_t last_millis;
@@ -80,7 +83,7 @@ Event event_pop();
 Event event_next();
 
 
-uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uint8_t mask);
+uint8_t event_register_button(uint8_t button_number, volatile uint8_t *port, uint8_t mask, uint8_t active_high);
 uint8_t event_register_analog(uint8_t analog_number, uint8_t channel);
 
 
