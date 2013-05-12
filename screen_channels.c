@@ -2,8 +2,9 @@
 #include "lcd.h"
 #include "global.h"
 #include "utils.h"
+#include "progress.h"
 
-int16_t _channel_data[6];
+uint16_t _channel_data[6];
 // static uint8_t _c;
 
 void screen_channels_setup(Screen *scr, TxProfile *txp)
@@ -19,8 +20,26 @@ void screen_channels_destroy(Screen *scr, TxProfile *txp)
 void screen_channels_paint(Screen *scr, TxProfile *txp)
 {
 
-    lcd_printfxy(0,0, " %+04i %+04i %+04i", _channel_data[0], _channel_data[1], _channel_data[2]);
-    lcd_printfxy(0,1, " %+04i %+04i %+04i", _channel_data[3], _channel_data[4], _channel_data[5]);
+    // lcd_printfxy(0,0, " %+04i %+04i %+04i", _channel_data[0], _channel_data[1], _channel_data[2]);
+    // lcd_printfxy(0,1, " %+04i %+04i %+04i", _channel_data[3], _channel_data[4], _channel_data[5]);
+
+    lcd_cursor(0,0);
+    lcd_putc(PROGRESS_LEFT);
+    progress_draw(4, _channel_data[0]/4);
+    lcd_putc(PROGRESS_SEP);
+    progress_draw(4, _channel_data[1]/4);
+    lcd_putc(PROGRESS_SEP);
+    progress_draw(4, _channel_data[2]/4);
+    lcd_putc(PROGRESS_RIGHT);
+
+    lcd_cursor(0,1);
+    lcd_putc(PROGRESS_LEFT);
+    progress_draw(4, _channel_data[3]/4);
+    lcd_putc(PROGRESS_SEP);
+    progress_draw(4, _channel_data[4]/4);
+    lcd_putc(PROGRESS_SEP);
+    progress_draw(4, _channel_data[5]/4);
+    lcd_putc(PROGRESS_RIGHT);
 
 }
 void screen_channels_event(Screen *scr, TxProfile *txp, Event *e)

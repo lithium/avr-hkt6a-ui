@@ -269,6 +269,11 @@ ISR(ADC_vect)
         }
     }
 
+    
+    extern uint16_t _counter;    
+    _counter++;
+    g_Screen.is_dirty = 1;
+
 
     if (++_event_analog_cur >= EVENT_ANALOG_MAX_COUNT) {
         _event_analog_cur = 0;

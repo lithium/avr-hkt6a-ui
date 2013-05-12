@@ -33,7 +33,10 @@ void screen_main_destroy(Screen *scr, TxProfile *txp)
 }
 void screen_main_paint(Screen *scr, TxProfile *txp)
 {
-    progress_draw(0,0, 5, _batt_voltage);
+    lcd_cursor(0,0);
+    lcd_putc(PROGRESS_LEFT);
+    progress_draw(4, _counter);
+    lcd_putc(PROGRESS_RIGHT);
 
     // if (_batt_voltage <= LOW_VOLTAGE) {
     //     lcd_printfxy(10,0, "!batt!");

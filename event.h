@@ -38,7 +38,7 @@ typedef enum {
 
 
 typedef struct {
-    int16_t values[6];
+    uint16_t values[6];
 } ChannelDataEvent;
 
 

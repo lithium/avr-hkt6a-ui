@@ -31,7 +31,7 @@ void serial_writechar(uint8_t c) {
 
 
 
-uint8_t _convert_channel_data_packet(uint8_t *packet, int16_t *out)
+uint8_t _convert_channel_data_packet(uint8_t *packet, uint16_t *out)
 {
     uint8_t i;
     uint16_t chksum=packet[14]<<8 | packet[15];
@@ -44,7 +44,7 @@ uint8_t _convert_channel_data_packet(uint8_t *packet, int16_t *out)
     }
 
     for (i=0; i<6; i++) {
-        out[i] = ((packet[i*2]<<8 | packet[i*2+1])-1000) - 512;
+        out[i] = ((packet[i*2]<<8 | packet[i*2+1])-1000);
     }
     return 1; 
 }
