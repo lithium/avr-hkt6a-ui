@@ -125,3 +125,34 @@ void progress_draw(uint8_t width, uint8_t value)
 }
 
 
+void slider_vertical_setup()
+{
+    uint8_t i;
+    uint8_t glyph[8];
+    for (i=0; i < 8; i++) {
+
+        uint8_t j=0;
+        //write blank lines
+        while (j < 8-(i+1)) {
+            glyph[j++] = 0;
+        }
+
+        while (j < 8) {
+            glyph[j++] = 0xFF;
+        }
+
+        lcd_send_cg(i, glyph);
+    }
+}
+
+void slider_vertical_draw(uint8_t col, uint8_t value)
+{
+    uint8_t v = MAP(value, 0,255, 0,15);
+
+    lcd_cursor(col,1);
+    if (v >= 8) {
+        lcd_putc(7);
+        lcd_cursor(col,0);
+    }
+    lcd_putc((v % 8)-1);
+}
