@@ -96,4 +96,8 @@ void force_clean_eeprom(uint8_t size);
 
 int update_profile_cache(uint8_t profile_id, TxProfile *txp);
 
+
+uint8_t read_settings_packet(TxProfile *txp, uint8_t *packet);
+void write_settings_packet(uint8_t *packet, TxProfile *txp);
+
 #endif

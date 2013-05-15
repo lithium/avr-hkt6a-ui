@@ -240,3 +240,95 @@ int save_settings_to_eeprom(TxSettings *txs)
     eeprom_update_block(txs, address+2, sizeof(TxSettings));
 }
 
+
+void write_settings_packet(uint8_t *packet, TxProfile *txp)
+{
+    uint8_t i;
+
+    *(uint16_t*)packet = 0xFF55;
+    // packet[0] = 85;
+    // packet[1] = 255;
+
+    packet[2] = (txp->stick_mode<<4) | 0; // force Type=ACRO
+    packet[3] = txp->reversed;
+
+    //6 bytes: of dual rate
+    memcpy(packet+4, &(txp->dual_rate), 6);
+
+    //3 bytes: swash AFR
+    memset(packet+10,0,3);
+
+    //12 bytes: endpoints
+    memcpy(packet+13, &(txp->endpoints), 12);
+
+    //20 bytes: throttle curve/pitch curve
+    memset(packet+24,0,20);
+
+    //6 bytes: subtrim
+    memcpy(packet+45, &(txp->subtrim), 6);
+
+    //12 bytes: mixer
+    for (i=0; i<3; i++) {
+        packet[51+i*4] = (txp->mixers[i].src << 4) | (txp->mixers[i].dest);
+        packet[52+i*4] = txp->mixers[i].up_rate;
+        packet[53+i*4] = txp->mixers[i].down_rate;
+        packet[54+i*4] = txp->mixers[i].sw;
+    }
+
+    //4 bytes: switches/variables
+    packet[63] = txp->switch_a;
+    packet[64] = txp->switch_b;
+    packet[65] = 1; // force on
+    packet[66] = 1; // force on
+
+    //2 bytes: checksum
+    uint16_t chksum=0;
+    for (i=2; i < 67; i++) chksum += packet[i];
+    packet[67] = (chksum & 0xFF00) >> 8;
+    packet[68] = chksum & 0x00FF;
+
+}
+
+uint8_t read_settings_packet(TxProfile *txp, uint8_t *packet)
+{
+    // if (*(uint16_t*)packet != 0x55FC) 
+    //     return 0;
+
+    uint8_t i;
+    uint16_t chksum = (packet[65]<<8) | packet[66];
+    for (i=0; i < 65; i++) chksum -= packet[i];
+    if (chksum)
+        return 0;
+
+
+    txp->stick_mode = (packet[0] & 0xF0) >> 4;
+    txp->reversed = packet[1];
+
+    //6 bytes: of dual rate
+    memcpy(&(txp->dual_rate), packet+2, 6);
+
+    //3 bytes: swash AFR
+
+    //12 bytes: endpoints
+    memcpy(&(txp->endpoints), packet+11, 12);
+
+    //20 bytes: throttle curve/pitch curve
+
+    //6 bytes: subtrim
+    memcpy(&(txp->subtrim), packet+43, 6);
+
+    //12 bytes: mixer
+    for (i=0; i<3; i++) {
+        txp->mixers[i].src = (packet[49+i*4] & 0xF0) >> 4;
+        txp->mixers[i].dest = packet[49+i*4] & 0x0F;
+        txp->mixers[i].up_rate = packet[50+i*4];
+        txp->mixers[i].down_rate = packet[51+i*4];
+        txp->mixers[i].sw = packet[52+i*4];
+    }
+
+    //4 bytes: switches/variables
+    txp->switch_a = packet[61];
+    txp->switch_b = packet[62];
+
+    return 1;
+}

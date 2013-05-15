@@ -3,6 +3,7 @@
 #include "global.h"
 #include "utils.h"
 #include "progress.h"
+#include "serial.h"
 
 uint16_t _channel_data[6];
 // static uint8_t _c;
@@ -36,10 +37,14 @@ void screen_channels_paint(Screen *scr, TxProfile *txp)
     lcd_putc(PROGRESS_LEFT);
     progress_draw(4, _channel_data[3]/4);
     lcd_putc(PROGRESS_SEP);
+
+    /*
     progress_draw(4, _channel_data[4]/4);
     lcd_putc(PROGRESS_SEP);
     progress_draw(4, _channel_data[5]/4);
     lcd_putc(PROGRESS_RIGHT);
+    */
+    lcd_printfxy(7,1,"c:%d",_counter);
 
 }
 void screen_channels_event(Screen *scr, TxProfile *txp, Event *e)
@@ -51,6 +56,10 @@ void screen_channels_event(Screen *scr, TxProfile *txp, Event *e)
     else
     if (e->type == EVENT_DOUBLE_CLICK) {
         screen_change(SCREEN_MAIN);
+    }
+    else
+    if (e->type == EVENT_LONG_CLICK) {
+        serial_load_settings();
     }
     else {
         return; //ignore any other event

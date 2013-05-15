@@ -16,4 +16,8 @@ extern TxProfileCache g_ProfileAdapter[];
 #define CLEAR_PROFILE_DIRTY() (g_Profile.reversed &= ~0b10000000)
 
 
+extern uint8_t _batt_voltage;
+extern uint16_t _counter;
+
+
 #endif

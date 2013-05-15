@@ -35,7 +35,7 @@ void screen_main_paint(Screen *scr, TxProfile *txp)
 {
     lcd_cursor(0,0);
     lcd_putc(PROGRESS_LEFT);
-    progress_draw(4, _counter);
+    progress_draw(4, _counter/4);
     lcd_putc(PROGRESS_RIGHT);
 
     // if (_batt_voltage <= LOW_VOLTAGE) {
