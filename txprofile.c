@@ -110,6 +110,8 @@ int update_profile_cache(uint8_t profile_id, TxProfile *txp)
 
     cache->reversed = txp->reversed & 0b00111111;
 
+    cache->mode = (txp->stick_mode&0x0F) <<4 | (txp->tx_mode & 0x0F);
+
     cache->profile_flags = 0;
     if (txp->switch_a == SWITCH_FUNC_DUAL_RATE || txp->switch_b == SWITCH_FUNC_DUAL_RATE) {
         cache->profile_flags |= (1<<PROFILE_FLAG_DR);
@@ -154,6 +156,9 @@ int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache)
 
     //reversed
     cache->reversed = _read_profile_default(address, offsetof(TxProfile, reversed));
+
+    cache->mode = _read_profile_default(address, offsetof(TxProfile, stick_mode)) << 4;
+    cache->mode |= _read_profile_default(address, offsetof(TxProfile, tx_mode))&0x0F;
 
     //determine dr/tc flags
     uint8_t switch_a = _read_profile_default(address, offsetof(TxProfile, switch_a));

@@ -93,6 +93,7 @@ extern TxSettings DefaultSettings;
 typedef struct {
     char name[12];
     uint8_t reversed;
+    uint8_t mode;
     uint8_t profile_flags;
 } TxProfileCache;
 
