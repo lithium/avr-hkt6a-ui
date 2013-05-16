@@ -8,7 +8,6 @@
 uint16_t _channel_data[6];
 // static uint8_t _c;
 
-static const char *_onoff_names[] = {"Off","On "};
 static uint8_t _calibrating=0;
 
 
@@ -21,8 +20,8 @@ void screen_channels_setup(Screen *scr, TxProfile *txp)
     memset(_channel_data, 0, 6);
     slider_vertical_setup();
 
-    lcd_cursor(8,0);
-    lcd_write("CAL:");
+    lcd_cursor(7,1);
+    lcd_write("CALIBRATE");
     lcd_display(0b101); // cursor off but blinking
 
 
@@ -36,15 +35,18 @@ void screen_channels_paint(Screen *scr, TxProfile *txp)
     // lcd_printfxy(0,0, " %+04i %+04i %+04i", _channel_data[0], _channel_data[1], _channel_data[2]);
     // lcd_printfxy(0,1, " %+04i %+04i %+04i", _channel_data[3], _channel_data[4], _channel_data[5]);
 
+    if (_calibrating) {
+        lcd_write("!!Calibrating!!");
+        lcd_cursor(0,1);
+        lcd_write("Move stix fully");
+    } else {
 
-    uint8_t i;
-    for (i=0; i < 6; i++) {
-        slider_vertical_draw(1+i, _channel_data[i]/4);
+        uint8_t i;
+        for (i=0; i < 6; i++) {
+            slider_vertical_draw(i, _channel_data[i]/4);
+        }
+        lcd_cursor(7,1);
     }
-
-    lcd_cursor(13,0);
-    lcd_write(_onoff_names[_calibrating]);
-    lcd_cursor(13,0);
 
 
 
@@ -72,6 +74,17 @@ void screen_channels_paint(Screen *scr, TxProfile *txp)
     // lcd_printfxy(7,1,"c:%d",_counter);
 
 }
+void _stop_calibrating()
+{
+    if (_calibrating) {
+        serial_stop_calibrate();
+        _calibrating = 0;
+        lcd_clear();
+        lcd_cursor(7,1);
+        lcd_write("CALIBRATE");
+        g_Screen.is_dirty = 1;
+    }
+}
 void screen_channels_event(Screen *scr, TxProfile *txp, Event *e)
 {
     if (e->type == EVENT_CHANNEL_DATA) {
@@ -80,13 +93,17 @@ void screen_channels_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_CLICK) {
+        _stop_calibrating();
+    }
+    else
+    if (e->type == EVENT_LONG_CLICK) {
         if (_calibrating) {
-            _calibrating = 0;
-            serial_stop_calibrate();
+            _stop_calibrating();
         }
         else {
             _calibrating = 1;
             serial_start_calibrate();
+            lcd_clear();
         }
     }
     else

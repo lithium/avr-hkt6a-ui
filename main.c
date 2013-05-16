@@ -77,7 +77,7 @@ int main(void)
     LED_ON();
 
     memset(&g_Screen, 0, sizeof(Screen));
-    screen_change(SCREEN_CHANNELS);
+    screen_change(SCREEN_MAIN);
 
     for (;;) {
 
