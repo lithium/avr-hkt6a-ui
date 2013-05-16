@@ -52,14 +52,11 @@ typedef struct {
     } mixers[NUM_MIXERS];
     //helicopter settings
     int8_t swash[3];
-    struct {
+    struct TxCurve {
         uint8_t normal;
         uint8_t idle;
     } throttle_curve[5];
-    struct {
-        uint8_t normal;
-        uint8_t idle;
-    } pitch_curve[5];
+    struct TxCurve pitch_curve[5];
 } TxProfile;
 
 typedef struct {

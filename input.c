@@ -24,7 +24,7 @@ void input_init(InputInfo *info, uint8_t info_size)
 
     //setup timer2 for key repeat
     TCCR2A = 0b011;
-    TCCR2B = 0b100; // prescale
+    TCCR2B = 0b011; // prescale
     TIMSK2 |= (1<<TOIE2);
 
 }
