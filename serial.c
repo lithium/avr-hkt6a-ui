@@ -14,6 +14,8 @@ static uint8_t *_packet;
 // queries:   
 //      get settings: 85,250,0
 //      set settings: 85,255,packet
+//      calibration start: 85,153,0
+//      calibration stop: 85,136,0
 // responses:
 //      channel data: 85,252
 //      settings data: 85,253
@@ -61,6 +63,20 @@ void serial_write_settings(TxProfile *txp)
     _transmit_packet(69);
 }
 
+void serial_start_calibrate()
+{
+    _packet_buffer[0] = 85;
+    _packet_buffer[1] = 153;
+    _packet_buffer[2] = 0;
+    _transmit_packet(3);
+}
+void serial_stop_calibrate()
+{
+    _packet_buffer[0] = 85;
+    _packet_buffer[1] = 136;
+    _packet_buffer[2] = 0;
+    _transmit_packet(3);
+}
 
 void _transmit_packet(uint8_t size)
 {
@@ -115,13 +131,13 @@ ISR(USART_RX_vect)
             }
             else
             if ((_packet_status & 0xFF) == 253) {
+                read_settings_packet(&g_Profile, (uint8_t *)_packet_buffer);
+                update_profile_cache(g_CurProfile, &g_Profile);
+                
                 _counter = 253;
                 g_Screen.is_dirty = 1;
 
-                read_settings_packet(&g_Profile, (uint8_t *)_packet_buffer);
-
             }
-            // _counter = _packet_status & 0xFF;
             _packet_status = 0;
         }
     }
@@ -130,11 +146,11 @@ ISR(USART_RX_vect)
         _packet_status &= ~_BV(PACKET_HEADER);
         _packet_status |= data;
         _packet_counter = 0;
-        if (data == 252) { // channel data
+        if (data == 252) { // channel data follows
             _packet_counter = 16;
         }
         else 
-        if (data == 253) { // settings packet
+        if (data == 253) { // settings packet follows
             _counter = 253;
             _packet_counter = 67;
         }
@@ -162,14 +178,7 @@ ISR(USART_TX_vect)
         _counter++;
         g_Screen.is_dirty =1;
 
-        if (_packet_counter == 0) {
-            // uint8_t i;
-            // for (i=0; i<69; i++) {
-            //     _packet_buffer[i] = serial_readchar();
-            // }
-            // _counter = _packet_buffer[1];
-        }
-        else
+        if (_packet_counter) //keep writing packet
             return;
 
     }

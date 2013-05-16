@@ -148,11 +148,18 @@ void slider_vertical_setup()
 void slider_vertical_draw(uint8_t col, uint8_t value)
 {
     uint8_t v = MAP(value, 0,255, 0,15);
+    uint8_t c = (v % 8);
 
-    lcd_cursor(col,1);
-    if (v >= 8) {
-        lcd_putc(7);
-        lcd_cursor(col,0);
+    lcd_cursor(col,0);
+    if (v < 8) {
+        lcd_putc(' ');
+        lcd_cursor(col,1);
+        lcd_putc(c);
     }
-    lcd_putc((v % 8)-1);
+    else {
+        lcd_putc(c);
+        lcd_cursor(col,1);
+        lcd_putc(7);
+    }
+    // lcd_putc( ? c : ' ');
 }
