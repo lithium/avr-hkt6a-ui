@@ -133,6 +133,9 @@ ISR(USART_RX_vect)
             if ((_packet_status & 0xFF) == 253) {
                 read_settings_packet(&g_Profile, (uint8_t *)_packet_buffer);
                 update_profile_cache(g_CurProfile, &g_Profile);
+
+                Event e = create_event(EVENT_SETTINGS_LOADED);
+                event_push(e);
                 
                 _counter = 253;
                 g_Screen.is_dirty = 1;

@@ -33,6 +33,7 @@ typedef enum {
     // EVENT_ANALOG_MIN,
     // EVENT_ANALOG_MAX,
     EVENT_CHANNEL_DATA,
+    EVENT_SETTINGS_LOADED,
     EVENT_NUM
 } EventType;
 

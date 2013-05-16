@@ -9,12 +9,15 @@ static InputInfo _name_inputs[] = {
     //x,y, min,max
     {4,0,   ' ','}'}, // printable ascii
     {6,1,   0,3},
+    {12,1,  0,1},
 };
 #define _name_inputs_size (sizeof(_name_inputs)/sizeof(InputInfo))
 
 static uint8_t _cursor=0;
+static uint8_t _loading=0;
 
 static const char *_mode_names[] = {"Mode1", "Mode2", "Mode3", "Mode4"};
+static const char *_loading_names[] = {"LOAD","LDNG"};
 
 void screen_name_setup(Screen *scr, TxProfile *txp)
 {
@@ -26,6 +29,7 @@ void screen_name_setup(Screen *scr, TxProfile *txp)
 
     input_init(_name_inputs, _name_inputs_size);
     input_assign(1, &txp->stick_mode);
+    // input_assign(2, _loading);
 }
 void screen_name_destroy(Screen *scr, TxProfile *txp)
 {
@@ -36,6 +40,8 @@ void screen_name_paint(Screen *scr, TxProfile *txp)
     lcd_printfxy(4,0,txp->name);
 
     lcd_printfxy(6,1, _mode_names[txp->stick_mode & 3]);
+
+    lcd_printfxy(12,1, _loading_names[_loading]);
 
     if (input_current() == 0) {
         lcd_cursor(4+_cursor,0);
@@ -59,7 +65,18 @@ void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
         else
         if (e->v.analog.number == 2) {
             int8_t v = (e->v.analog.position - 128)/64; // -7 .. +7
-            input_value(v);
+
+            if (input_current() == 2) {
+                if (v > 0) {
+                    _loading = 1;
+                    serial_load_settings();
+                }
+            }
+            else {
+                input_value(v);
+
+            }
+
             if (v) {
                 SET_PROFILE_DIRTY();
             }
@@ -78,6 +95,10 @@ void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
     else
     if (e->type == EVENT_DOUBLE_CLICK) {
         save_or_abort();
+    }
+    else
+    if (e->type == EVENT_SETTINGS_LOADED) {
+        _loading = 0;
     }
     else {
         return; //ignore any other event
