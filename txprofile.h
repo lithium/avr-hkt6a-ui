@@ -10,6 +10,11 @@
 #define STICK_MODE3 2
 #define STICK_MODE4 3
 
+#define TX_MODE_ACRO 0
+#define TX_MODE_HELI_120 1
+#define TX_MODE_HELI_90 2
+#define TX_MODE_HELI_140 3
+
 #define SWITCH_FUNC_NULL 0
 #define SWITCH_FUNC_DUAL_RATE 1
 #define SWITCH_FUNC_THROTTLE_CUT 2
@@ -24,6 +29,7 @@
 #define NUM_MIXERS 3
 typedef struct {
     char name[12];
+    uint8_t tx_mode; // acro or heli
     uint8_t stick_mode;
     uint8_t reversed;
     struct {
@@ -44,6 +50,16 @@ typedef struct {
         int8_t down_rate;
         uint8_t sw;
     } mixers[NUM_MIXERS];
+    //helicopter settings
+    int8_t swash[3];
+    struct {
+        uint8_t normal;
+        uint8_t idle;
+    } throttle_curve[5];
+    struct {
+        uint8_t normal;
+        uint8_t idle;
+    } pitch_curve[5];
 } TxProfile;
 
 typedef struct {

@@ -5,6 +5,7 @@
 
 TxProfile DefaultProfile = {
     "            ", //12 bytes
+    (uint8_t)0, //acro
     (uint8_t)1, //mode2
     (uint8_t)0, //no channels reversed
     {
@@ -19,7 +20,7 @@ TxProfile DefaultProfile = {
         {(uint8_t)100,(uint8_t)100},
         {(uint8_t)100,(uint8_t)100},
         {(uint8_t)100,(uint8_t)100},
-    },
+    }, //endpoints
     {(int8_t)0,(int8_t)0,(int8_t)0,(int8_t)0,(int8_t)0,(int8_t)0}, //subtrim
     (uint8_t)1, //swa - dualrate
     (uint8_t)2, //swb - throttlecut
@@ -28,6 +29,21 @@ TxProfile DefaultProfile = {
         {(uint8_t)0,(uint8_t)0,(int8_t)100,(int8_t)100,(uint8_t)3},
         {(uint8_t)0,(uint8_t)0,(int8_t)100,(int8_t)100,(uint8_t)3},
     }, // 3mixers off by default
+    (uint8_t)0, (uint8_t)0, (uint8_t)0, //swash
+    {
+        (uint8_t)10, (uint8_t)10,
+        (uint8_t)25, (uint8_t)25,
+        (uint8_t)50, (uint8_t)50,
+        (uint8_t)75, (uint8_t)75,
+        (uint8_t)100, (uint8_t)100,
+    }, //linear throttle curve
+    {
+        (uint8_t)10, (uint8_t)10,
+        (uint8_t)25, (uint8_t)25,
+        (uint8_t)50, (uint8_t)50,
+        (uint8_t)75, (uint8_t)75,
+        (uint8_t)100, (uint8_t)100,
+    }, //linear pitch curve
 };
 
 TxSettings DefaultSettings = {0};
@@ -245,24 +261,24 @@ void write_settings_packet(uint8_t *packet, TxProfile *txp)
 {
     uint8_t i;
 
-    *(uint16_t*)packet = 0xFF55;
-    // packet[0] = 85;
-    // packet[1] = 255;
+    packet[0] = 85;
+    packet[1] = 255;
 
-    packet[2] = (txp->stick_mode<<4) | 0; // force Type=ACRO
+    packet[2] = (txp->stick_mode<<4) | (txp->tx_mode&0x0F);
     packet[3] = txp->reversed;
 
     //6 bytes: of dual rate
     memcpy(packet+4, &(txp->dual_rate), 6);
 
     //3 bytes: swash AFR
-    memset(packet+10,0,3);
+    memcpy(packet+10, &(txp->swash), 3);
 
     //12 bytes: endpoints
     memcpy(packet+13, &(txp->endpoints), 12);
 
     //20 bytes: throttle curve/pitch curve
-    memset(packet+24,0,20);
+    memcpy(packet+24, &(txp->throttle_curve), 10);
+    memcpy(packet+34, &(txp->pitch_curve), 10);
 
     //6 bytes: subtrim
     memcpy(packet+45, &(txp->subtrim), 6);
@@ -302,17 +318,21 @@ uint8_t read_settings_packet(TxProfile *txp, uint8_t *packet)
 
 
     txp->stick_mode = (packet[0] & 0xF0) >> 4;
+    txp->tx_mode = (packet[0] & 0x0F);
     txp->reversed = packet[1];
 
     //6 bytes: of dual rate
     memcpy(&(txp->dual_rate), packet+2, 6);
 
     //3 bytes: swash AFR
+    memcpy(&(txp->swash), packet+8, 6);
 
     //12 bytes: endpoints
     memcpy(&(txp->endpoints), packet+11, 12);
 
     //20 bytes: throttle curve/pitch curve
+    memcpy(&(txp->throttle_curve), packet+23, 10);
+    memcpy(&(txp->pitch_curve), packet+33, 10);
 
     //6 bytes: subtrim
     memcpy(&(txp->subtrim), packet+43, 6);
