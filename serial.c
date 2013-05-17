@@ -49,9 +49,14 @@ void serial_writechar(uint8_t c) {
 
 
 
+#define _turn_rx_off() UCSR0B &= ~_BV(RXCIE0)
+#define _turn_rx_on() UCSR0B |= _BV(RXCIE0)
+
+
 
 void _transmit_packet(uint8_t size)
 {
+
     _packet = _packet_buffer+1;
     _packet_status = _BV(PACKET_WRITING);
     _packet_counter = size-1;
@@ -63,11 +68,11 @@ void _transmit_packet(uint8_t size)
     // UDR0 = *_packet_buffer;
 
     UCSR0B |= _BV(TXCIE0);  // transmit interrupt on
-    UCSR0B &= ~_BV(RXCIE0);  
 }
 
 void serial_load_settings()
 {
+    _turn_rx_off();
     _packet_buffer[0] = 85;
     _packet_buffer[1] = 250;
     _packet_buffer[2] = 0;
@@ -76,12 +81,14 @@ void serial_load_settings()
 
 void serial_write_settings(TxProfile *txp)
 {
+    _turn_rx_off();
     write_settings_packet(_packet_buffer, txp);
     _transmit_packet(69);
 }
 
 void serial_start_calibrate()
 {
+    _turn_rx_off();
     _packet_buffer[0] = 85;
     _packet_buffer[1] = 153;
     _packet_buffer[2] = 0;
@@ -89,6 +96,7 @@ void serial_start_calibrate()
 }
 void serial_stop_calibrate()
 {
+    _turn_rx_off();
     _packet_buffer[0] = 85;
     _packet_buffer[1] = 136;
     _packet_buffer[2] = 0;
