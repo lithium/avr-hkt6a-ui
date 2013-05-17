@@ -2,6 +2,7 @@
 #include "lcd.h"
 #include "input.h"
 #include "global.h"
+#include "serial.h"
 
 
 
@@ -21,6 +22,7 @@ static const char *_loading_names[] = {"LOAD","LDNG"};
 
 void screen_name_setup(Screen *scr, TxProfile *txp)
 {
+    g_Status = STATUS_NORMAL;
     lcd_clear();
     lcd_printfxy(0,0,"#%d:", g_CurProfile+1);
     lcd_printfxy(0,1,"MODE:");
@@ -99,6 +101,7 @@ void screen_name_event(Screen *scr, TxProfile *txp, Event *e)
     else
     if (e->type == EVENT_SETTINGS_LOADED) {
         _loading = 0;
+        SET_PROFILE_DIRTY();
     }
     else {
         return; //ignore any other event

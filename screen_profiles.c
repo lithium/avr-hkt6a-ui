@@ -34,7 +34,7 @@ void screen_profiles_paint(Screen *scr, TxProfile *txp)
         rev[i] = cache->reversed & (1<<i) ? 'R' : 'n';
     }
 
-    rev[7]=0; //null terminate string
+    // rev[7]=0; //null terminate string
     // lcd_printfxy(0,1, "%s %s %s ", rev,
     //     cache->profile_flags & (1<<PROFILE_FLAG_DR) ? "DR" : "  ",
     //     cache->profile_flags & (1<<PROFILE_FLAG_TC) ? "TC" : "  ");
@@ -58,12 +58,14 @@ void screen_profiles_event(Screen *scr, TxProfile *txp, Event *e)
     }
     else
     if (e->type == EVENT_CLICK) {
-        profile_change(_cur_profile);
+        g_Status = STATUS_NORMAL;
+        profile_change(_cur_profile,1);
         screen_change(SCREEN_MAIN);
     }
     else
     if (e->type == EVENT_LONG_CLICK) {
-        profile_change(_cur_profile);
+        g_Status = STATUS_NORMAL;
+        profile_change(_cur_profile,0);
         screen_change(SCREEN_NAME);
     }
     else

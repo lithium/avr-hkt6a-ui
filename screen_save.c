@@ -42,7 +42,7 @@ void _save_or_exit(uint8_t save)
     } 
     else {
         //reload profile
-        profile_change(g_CurProfile); 
+        profile_change(g_CurProfile,0); 
     }
     screen_change(SCREEN_MAIN);
 }

@@ -14,7 +14,7 @@ static InputInfo _curve_inputs[] = {
 
 void _curve_switch_input(TxProfile *txp)
 {
-    struct TxCurve *eps = _curve_is_pitch ? &(txp->pitch_curve) : &(txp->throttle_curve);
+    struct TxCurve *eps = (struct TxCurve *)(_curve_is_pitch ? &(txp->pitch_curve) : &(txp->throttle_curve));
     if (_curve_cur_input < 5)
         input_assign(0, &(eps[_curve_cur_input].normal));
     else
@@ -47,7 +47,7 @@ void screen_curve_paint(Screen *scr, TxProfile *txp)
     lcd_write(_curve_cur_input < 5 ? "norm" : "idle");
     lcd_putc('1' + (_curve_cur_input % 5));
 
-    struct TxCurve *eps = _curve_is_pitch ? &(txp->pitch_curve) : &(txp->throttle_curve);
+    struct TxCurve *eps = (struct TxCurve *)(_curve_is_pitch ? &(txp->pitch_curve) : &(txp->throttle_curve));
     uint8_t i;
     for (i=0; i < 5; i++) {
         slider_vertical_draw(5+i, MAP(eps[i].normal, 0,100, 0,255));

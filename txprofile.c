@@ -29,20 +29,20 @@ TxProfile DefaultProfile = {
         {(uint8_t)0,(uint8_t)0,(int8_t)100,(int8_t)100,(uint8_t)3},
         {(uint8_t)0,(uint8_t)0,(int8_t)100,(int8_t)100,(uint8_t)3},
     }, // 3mixers off by default
-    (uint8_t)0, (uint8_t)0, (uint8_t)0, //swash
+    {(uint8_t)0, (uint8_t)0, (uint8_t)0}, //swash
     {
-        (uint8_t)10, (uint8_t)10,
-        (uint8_t)25, (uint8_t)25,
-        (uint8_t)50, (uint8_t)50,
-        (uint8_t)75, (uint8_t)75,
-        (uint8_t)100, (uint8_t)100,
+        {(uint8_t)10, (uint8_t)10},
+        {(uint8_t)25, (uint8_t)25},
+        {(uint8_t)50, (uint8_t)50},
+        {(uint8_t)75, (uint8_t)75},
+        {(uint8_t)100, (uint8_t)100},
     }, //linear throttle curve
     {
-        (uint8_t)10, (uint8_t)10,
-        (uint8_t)25, (uint8_t)25,
-        (uint8_t)50, (uint8_t)50,
-        (uint8_t)75, (uint8_t)75,
-        (uint8_t)100, (uint8_t)100,
+        {(uint8_t)10, (uint8_t)10},
+        {(uint8_t)25, (uint8_t)25},
+        {(uint8_t)50, (uint8_t)50},
+        {(uint8_t)75, (uint8_t)75},
+        {(uint8_t)100, (uint8_t)100},
     }, //linear pitch curve
 };
 
@@ -259,6 +259,7 @@ int save_settings_to_eeprom(TxSettings *txs)
     uint8_t *address = PROFILE_EEPROM_SETTINGS_OFFSET;
     eeprom_update_word((uint16_t*)address, PROFILE_SAVEBLOCK_HEADER);
     eeprom_update_block(txs, address+2, sizeof(TxSettings));
+    return 1;
 }
 
 
@@ -282,8 +283,8 @@ void write_settings_packet(uint8_t *packet, TxProfile *txp)
     memcpy(packet+13, &(txp->endpoints), 12);
 
     //20 bytes: throttle curve/pitch curve
-    memcpy(packet+24, &(txp->throttle_curve), 10);
-    memcpy(packet+34, &(txp->pitch_curve), 10);
+    memcpy(packet+25, &(txp->throttle_curve), 10);
+    memcpy(packet+35, &(txp->pitch_curve), 10);
 
     //6 bytes: subtrim
     memcpy(packet+45, &(txp->subtrim), 6);

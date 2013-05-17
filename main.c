@@ -8,6 +8,7 @@
 #define LED_ON() PORTB |= _BV(5)
 #define LED_OFF() PORTB |= _BV(5)
 
+#include "global.h"
 #include "lcd.h"
 #include "millis.h"
 #include "event.h"
@@ -21,15 +22,26 @@ TxProfile g_Profile;
 uint8_t g_CurProfile=0;
 TxProfileCache g_ProfileAdapter[PROFILE_MAX_COUNT];
 TxSettings g_Settings;
+uint8_t g_Status;
+
+// g_
+
+// uint8_t g_Booting=1;
 
 
 
-void profile_change(uint8_t profile_id) 
+void profile_change(uint8_t profile_id, uint8_t send_settings) 
 {
     g_CurProfile = profile_id;
     load_profile_from_eeprom(g_CurProfile, &g_Profile);
+
+    //save current profile to eeprom for next boot
     g_Settings.cur_profile = profile_id;
     save_settings_to_eeprom(&g_Settings);
+
+    //send new profile to the tx
+    if (send_settings)
+        serial_write_settings(&g_Profile);
 }
 
 
@@ -37,6 +49,7 @@ extern uint8_t _batt_voltage;
 
 int main(void) 
 {
+    // g_Booting=1;
     serial_init(); // must occur with interrupts off
 
 
@@ -49,14 +62,18 @@ int main(void)
 
     millis_init();
     lcd_init();
-    progress_init();
+    // progress_init();
     event_init();
 
 
     // force_clean_eeprom(PROFILE_MAX_COUNT);
 
+    serial_load_settings();
+    g_Status = STATUS_INITIAL_CONFIG;
+
+
     load_settings_from_eeprom(&g_Settings);
-    profile_change(g_Settings.cur_profile);
+    profile_change(g_Settings.cur_profile, 0);
 
     init_profile_cache(g_ProfileAdapter, PROFILE_MAX_COUNT);
 

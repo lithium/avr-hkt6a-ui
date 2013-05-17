@@ -33,10 +33,11 @@ void screen_main_destroy(Screen *scr, TxProfile *txp)
 }
 void screen_main_paint(Screen *scr, TxProfile *txp)
 {
-    lcd_cursor(0,0);
-    lcd_putc(PROGRESS_LEFT);
-    progress_draw(4, _counter/4);
-    lcd_putc(PROGRESS_RIGHT);
+//     lcd_cursor(0,0);
+//     lcd_putc(PROGRESS_LEFT);
+//     progress_draw(4, _counter/4);
+//     lcd_putc(PROGRESS_RIGHT);
+    lcd_printfxy(0,0, "c:%d",_counter);
 
     // if (_batt_voltage <= LOW_VOLTAGE) {
     //     lcd_printfxy(10,0, "!batt!");
@@ -44,7 +45,14 @@ void screen_main_paint(Screen *scr, TxProfile *txp)
     // else {
     //     lcd_printfxy(11,0, "v%1d.%1d", _batt_voltage / 10, _batt_voltage % 10);
     // }
-    lcd_printfxy(0,1, "#%d: %s", g_CurProfile+1, g_Profile.name);
+
+    if (g_Status == STATUS_PROFILE_MISMATCH) {
+        lcd_cursor(0,1);
+        lcd_write("!CFG MISMATCH!");
+    }
+    else {
+        lcd_printfxy(0,1, "#%d: %s", g_CurProfile+1, g_Profile.name);
+    }
 
 }
 void screen_main_event(Screen *scr, TxProfile *txp, Event *e)

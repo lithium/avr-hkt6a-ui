@@ -105,7 +105,7 @@ int update_profile_cache_from_eeprom(uint8_t profile_id, TxProfileCache *cache);
 void save_profile_to_eeprom(uint8_t profile_id, TxProfile *txp);
 int load_profile_from_eeprom(uint8_t profile_id, TxProfile *txp);
 
-void profile_change(uint8_t profile_id);
+void profile_change(uint8_t profile_id, uint8_t send_settings);
 void force_clean_eeprom(uint8_t size);
 
 int update_profile_cache(uint8_t profile_id, TxProfile *txp);

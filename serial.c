@@ -49,6 +49,23 @@ void serial_writechar(uint8_t c) {
 
 
 
+
+void _transmit_packet(uint8_t size)
+{
+    _packet = _packet_buffer+1;
+    _packet_status = _BV(PACKET_WRITING);
+    _packet_counter = size-1;
+
+    _counter = 21;
+    g_Screen.is_dirty = 1;
+
+    serial_writechar(*_packet_buffer); // send first byte
+    // UDR0 = *_packet_buffer;
+
+    UCSR0B |= _BV(TXCIE0);  // transmit interrupt on
+    UCSR0B &= ~_BV(RXCIE0);  
+}
+
 void serial_load_settings()
 {
     _packet_buffer[0] = 85;
@@ -76,22 +93,6 @@ void serial_stop_calibrate()
     _packet_buffer[1] = 136;
     _packet_buffer[2] = 0;
     _transmit_packet(3);
-}
-
-void _transmit_packet(uint8_t size)
-{
-    _packet = _packet_buffer+1;
-    _packet_status = _BV(PACKET_WRITING);
-    _packet_counter = size-1;
-
-    _counter = 21;
-    g_Screen.is_dirty = 1;
-
-    serial_writechar(*_packet_buffer); // send first byte
-    // UDR0 = *_packet_buffer;
-
-    UCSR0B |= _BV(TXCIE0);  // transmit interrupt on
-    UCSR0B &= ~_BV(RXCIE0);  
 }
 
 uint8_t _convert_channel_data_packet(uint8_t *packet, uint16_t *out)
@@ -131,14 +132,32 @@ ISR(USART_RX_vect)
             }
             else
             if ((_packet_status & 0xFF) == 253) {
-                read_settings_packet(&g_Profile, (uint8_t *)_packet_buffer);
+
+                if (g_Status == STATUS_INITIAL_CONFIG) {
+                    TxProfile txconfig;
+                    read_settings_packet(&txconfig, (uint8_t *)_packet_buffer);
+                    if (memcmp(&txconfig, &g_Profile, sizeof(TxProfile)) != 0) {
+                        g_Status = STATUS_PROFILE_MISMATCH;
+                    }
+                    else {
+                        g_Status = STATUS_NORMAL;
+                    }
+
+
+                } else {
+                    read_settings_packet(&g_Profile, (uint8_t *)_packet_buffer);
+                _counter = 253;
+                g_Screen.is_dirty = 1;
+
+                }
+
+
+
                 update_profile_cache(g_CurProfile, &g_Profile);
 
                 Event e = create_event(EVENT_SETTINGS_LOADED);
                 event_push(e);
                 
-                _counter = 253;
-                g_Screen.is_dirty = 1;
 
             }
             _packet_status = 0;
