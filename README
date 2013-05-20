@@ -1,32 +1,202 @@
+Overview
+====
+
+Attiny84
+    flash: 8k
+    eeprom: 512b
+    ram: 512b
+    io: 12 pins
+
+Required I/O pins (13):
+    digital
+    ---
+        7- LCD 
+        1- button
+        2- rx/tx
+    analog
+    ---
+        1- THR
+        1- AIL
+        1- batt voltage
 
 
-DIN connector:
-    1: PMM signal
-    2: +5v
-    3: RX
-    4: TX
+16x2 character lcd
+
+
+
+ProfileCache - 84bytes - 14*6
+    name - 12 bytes
+    reversed - 1 byte
+    flags - 1 byte
 
 
 
 
 
-arduino uno:
-     0(rx) -> DIN 4(tx)
-     1(tx) -> DIN 3(rx)
+6 profiles: 56 bytes +24   80bytes
+    name: 12 byte
+    tx_mode: 1byte
+    stick_modes: 1 byte
+    reverse: 1 byte
+    dualrate: 6 bytes (2bytes * 3)
+    endpoints: 12 bytes (2bytes * 6)
+    subtrim: 6 bytes (1byte * 6)
+    switch: 2 bytes
+    mixer: 15 bytes (5bytes * 3)
+    swash: 3 bytes
+    thr curve: 10bytes
+    pitch curve: 10ytes
+
+
+    //helicopter stuff: 23- 161bits = 23 * 7(twos complement values)
+
+
+Memory
+===
+
+boot sequence
+---
+    - grab app settings from storage
+    - load current/default profile from storage into Programmer
+    - fetch current config from device
+    - compare the two, if they differ, show flag on Main screen.
 
 
 
 
-    10(pb2) -> LCD 4(rs)
-     9(pb1) -> LCD 5(rw)
-     8(pb0) -> LCD 6(e)
-     7(pd7) -> LCD 7(DB0)
-     6(pd6) -> LCD 8(DB1)
-     5(pd5) -> LCD 9(DB2)
-     4(pd4) -> LCD 10(DB3)
+
+UI Concepts
+====
+"throttle up/down" scrolls the list.
+"click" moves cursor to next value.
+"right-stick left/right" adjust value under cursor.
+"long press" navigates to next screen.
+"double click" returns to main screen.
 
 
-    A0(pc0) -> THR
-    A1(pc1) -> AIL
-    A3(pc2) -> BUTTON
-    
+Workflows
+====
+
+
+Main screen
+ 0123456789012345
++----------------+          
+|      high v11.9|            
+|-thr- low !batt!|
+|#2: plus copter |
++----------------+
+dbl click: ->"Channels"
+long press [with throttle cut]: ->"Profiles"
+
+Channels
++----------------+
+|[    |    |    ]|
+|[    |    |    ]|
++----------------+
+
+ 0123456789012345
++----------------+
+|###### CALIBRATE|
+|######          |
++----------------+
+|!!Calibrating!! |
+|move stix fully |
++----------------+
+dbl click: ->"Communication"
+long press: calibrate start/stop
+
+
+Profiles
+ 0123456789012345
++----------------+
+|#1: model a     |
+|nnRnnR ACRO  123|
++----------------+
+
+throttle: profile select
+button: select current model ->"Main Menu"
+long press: ->"Edit Model" under cursor
+
+
+Edit Model
+ 0123456789012345
++----------------+                  
+|#1: model name  |                 
+|MODE: mode2 LOAD|
++----------------+
+throttle: cursor left/right
+click: next value
+r-stick left/right: next/prev char
+long press: ->"Model EPA"
+dbl click: ->"Main Menu"
+
+
+Model EPA
++----------------+
+|CH1 R DR:xxx/xxx|
+|EP:xxx/xxx  +xxx|
++----------------+
+throttle: channel select
+click: next value
+r-stick left/right: adjust value
+long press: ->"Switches"
+dbl click: ->"Main Menu"
+
+
+Switches
++----------------+
+|SW.A:dualrate   |
+|SW.B:throttlecut|t
++----------------+
+click: next value
+r-stick left/right: adjust value
+long press: -> "Mixes"
+dbl click: ->"Main Menu"
+
+
+Mixes
++----------------+
+|MIX1 VRB>CH3 SWA|
+|UP:+XXX  DN:+XXX|
++----------------+
+throttle: scroll mix up/down
+click: next value
+r-stick left/right: adjust value
+long press: -> "Type"
+
+
+Type
+ 0123456789012345
++----------------+          
+|TYPE: Heli-120  |
+| +xxx/+xxx/+xxx |
++----------------+          
+click: next value (Swash afr)
+r-stick left/right: adjust value
+long press: -> "Throttle Curve"
+
+
+Throttle Curve
+ 0123456789012345
++----------------+          
+|THR  ##### #####|
+|norm1##### #####|
++----------------+          
+throttle:  switch between THR and PTCH
+button: next value
+rstick: adjust vertical slider (0..100)
+long press: -> "Edit Model"
+
+
+Save
+ 0123456789012345
++----------------+          
+|Save? Yes       |
+|#1: xxxxxxxxxxx |
++----------------+
+rstick: adjust value          
+double click: abort ->"Main Menu"
+long press: save if yes->"Main Menu"
+click: save if yes ->"Main Menu"
+
+
